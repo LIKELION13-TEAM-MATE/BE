@@ -1,0 +1,25 @@
+# .github/workflows/ci.yml
+name: Java CI with Gradle
+
+on:
+  push:
+    branches: [ "main" ] # main 브랜치에 push 될 때마다 실행
+  pull_request:
+    branches: [ "main" ] # main 브랜치로 pull request 할 때마다 실행
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # 우분투 환경에서 실행
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build with Gradle
+        run: ./gradlew build # 프로젝트를 빌드합니다. (여기까지가 끝!)

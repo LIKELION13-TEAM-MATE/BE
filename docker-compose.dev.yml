@@ -1,0 +1,19 @@
+services:
+  projectname-mysql:     # 팀/프로젝트 이름을 접두사로 붙여 팀원이 여러 도커 띄워도 충돌이 안 나도록!
+    image: mysql:8.0.43
+    container_name: team_mate-mysql-dev  # 프로젝트-서비스-환경 -> 협업 시 직관적임
+    environment:
+      MYSQL_ROOT_PASSWORD: team_mate_root
+      MYSQL_DATABASE: team_mate_db
+      MYSQL_USER: team_mate
+      MYSQL_PASSWORD: team_mate_pw
+      TZ: Asia/Seoul
+    command: [
+      "--default-authentication-plugin=caching_sha2_password",
+      "--character-set-server=utf8mb4",
+      "--collation-server=utf8mb4_unicode_ci"
+    ]
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./_vol/mysql:/var/lib/mysql

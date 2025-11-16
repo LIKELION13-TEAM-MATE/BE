@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>프로젝트 상세</title>
+</head>
+<body>
+<div th:object="${project}">
+    <h1 th:text="*{projectName}">프로젝트 이름</h1>
+
+    <!--##############팀장 권한(수정,삭제,초대)##############-->
+    <div th:if="${#authentication.name == project.member.username}">
+
+        <!--수정 및 삭제-->
+        <p>
+            <a th:href="@{/project/edit/{id}(id=*{id})}">수정</a>
+        </p>
+
+        <form th:action="@{/project/delete/{id}(id=*{id})}" method="post" style="display:inline;">
+            <button type="submit" onclick="return confirm('정말로 이 프로젝트를 삭제하시겠습니까?');">
+                삭제
+            </button>
+        </form>
+        <hr/>
+
+        <!--초대-->
+        <form th:action="@{/project/detail/{id}/invite(id=${project.id})}" method="post">
+            <label for="username">초대할 팀원 ID:</label>
+            <input type="text" id="username" name="username" />
+            <button type="submit">초대</button>
+        </form>
+
+        <div th:if="${errorMessage}" style="color: red;">
+            <p th:text="${errorMessage}">오류 메시지</p>
+        </div>
+
+        <div th:if="${successMessage}" style="color: green;">
+            <p th:text="${successMessage}">성공 메시지</p>
+        </div>
+
+    </div> <hr/>
+
+    <!--##############멤버 목록##############-->
+    <ul>
+        <li th:each="membership : ${project.teamMemberships}">
+            <span th:text="${membership.member.username}">팀원 이름</span>
+            <strong th:if="${project.member.id == membership.member.id}"> 리더</strong>
+
+            <form th:if="${#authentication.name == project.member.username AND project.member.id != membership.member.id}"
+                  th:action="@{/project/{pid}/kick/{mid}(pid=*{id}, mid=${membership.id})}"
+                  method="post" style="display:inline; margin-left: 10px;">
+
+                <button type="submit" onclick="return confirm('이 팀원을 정말로 강퇴하시겠습니까?');" >
+                    강퇴
+                </button>
+            </form>
+        </li>
+    </ul>
+
+    <!--##############프로젝트 정보##############-->
+    <p>
+        <strong>카테고리:</strong> <span th:text="*{category}">카테고리</span>
+    </p>
+    <p>
+        <strong>마감일:</strong> <span th:text="*{deadline}">마감일</span>
+    </p>
+    <p>
+        <strong>테마 색상:</strong> <span th:text="*{themeColor}">테마 색상</span>
+    </p>
+
+</div>
+<hr/>
+
+<p><a th:href="@{/project/list}">프로젝트 목록</a></p>
+<p><a th:href="@{/home/main}">메인화면</a></p>
+</body>
+</html>

@@ -10,7 +10,8 @@
     <h2 th:text="*{projectName}">프로젝트 이름</h2>
 
     <a>게시판</a> |
-    <a th:href="@{/project/{id}/roles(id=${project.id})}">역할</a>
+    <a th:href="@{/project/{id}/roles(id=${project.id})}">역할</a> |
+    <a th:href="@{/project/{projectId}/events/calendar(projectId=${project.id})}">일정</a>
 
     <!--##############팀장 권한(수정,삭제,초대)##############-->
     <div th:if="${#authentication.name == project.member.username}">

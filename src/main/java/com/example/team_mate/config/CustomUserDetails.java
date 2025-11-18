@@ -44,4 +44,9 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() { return true; }
+
+    public Member getMember() {
+        return member;
+    }
+
 }

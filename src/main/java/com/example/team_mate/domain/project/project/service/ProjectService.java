@@ -22,9 +22,7 @@ public class ProjectService {
     private final MemberRepository memberRepository;
     private final TeamMembershipRepository teamMembershipRepository;
 
-    /*****
-     새 프로젝트 생성
-     *****/
+    /** 새 프로젝트 생성 */
     @Transactional
     public Project createProject(ProjectCreateRequest request, String username) {
         // 리더(멤버) 찾기
@@ -50,9 +48,7 @@ public class ProjectService {
         return savedProject;
     }
 
-    /*****
-     내 프로젝트 목록
-     *****/
+    /** 내 프로젝트 목록 */
     @Transactional(readOnly = true)
     public List<Project> findMyProjects(String username) {
 
@@ -67,18 +63,14 @@ public class ProjectService {
                 .collect(Collectors.toList());
     }
 
-    /*****
-     프로젝트 detail
-     *****/
+    /** 프로젝트 detail */
     @Transactional(readOnly = true)
     public Project findProjectById(Long projectId) {
         return projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 ID의 프로젝트가 없습니다. id=" + projectId));
     }
 
-    /*****
-     프로젝트 수정
-     *****/
+    /** 프로젝트 수정 */
     @Transactional
     public void updateProject(Long projectId, ProjectCreateRequest request) {
         Project project = projectRepository.findById(projectId)
@@ -92,9 +84,7 @@ public class ProjectService {
         );
     }
 
-    /*****
-     프로젝트 삭제
-     *****/
+    /** 프로젝트 삭제 */
     @Transactional
     public void deleteProject(Long projectId) {
         projectRepository.deleteById(projectId);

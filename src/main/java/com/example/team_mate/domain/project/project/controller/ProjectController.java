@@ -1,5 +1,6 @@
 package com.example.team_mate.domain.project.project.controller;
 
+import com.example.team_mate.domain.post.post.service.PostService;
 import com.example.team_mate.domain.project.project.dto.ProjectCreateRequest;
 import com.example.team_mate.domain.project.project.entity.Project;
 import com.example.team_mate.domain.project.project.service.ProjectService;
@@ -7,7 +8,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
 
@@ -17,19 +21,16 @@ import java.util.List;
 public class ProjectController {
 
     private final ProjectService projectService;
+    private final PostService postService;
 
-    /*****
-     새 프로젝트 생성 form
-     *****/
+    /** 새 프로젝트 생성 form */
     @GetMapping("/new")
     public String showCreateForm(Model model) {
         model.addAttribute("request", new ProjectCreateRequest());
         return "project/create";
     }
 
-    /*****
-     프로젝트 생성
-     *****/
+    /** 프로젝트 생성 */
     @PostMapping("/create")
     public String createProject(ProjectCreateRequest request, Authentication authentication) {
         String username = authentication.getName();
@@ -38,9 +39,7 @@ public class ProjectController {
         return "redirect:/project/detail/" + newProject.getId();
     }
 
-    /*****
-     프로젝트 목록
-     *****/
+    /** 프로젝트 목록 */
     @GetMapping("/list")
     public String showMyProjectList(Model model, Authentication authentication) {
 
@@ -52,24 +51,24 @@ public class ProjectController {
         return "project/list";
     }
 
-    /*****
-     프로젝트 detail
-     *****/
+    /** 프로젝트 detail */
     @GetMapping("/detail/{projectId}")
     public String showProjectDetail(
             @PathVariable Long projectId,
             Model model
     ) {
+        // 프로젝트 정보 가져오기
         Project project = projectService.findProjectById(projectId);
-
         model.addAttribute("project", project);
+
+        // 게시글 목록 가져오기
+        java.util.List<com.example.team_mate.domain.post.post.entity.Post> posts = postService.getPostsByProject(projectId);
+        model.addAttribute("posts", posts);
 
         return "project/detail";
     }
 
-    /*****
-     프로젝트 수정 form
-     *****/
+    /** 프로젝트 수정 form */
     @GetMapping("/edit/{projectId}")
     public String showEditForm(
             @PathVariable Long projectId,
@@ -80,9 +79,7 @@ public class ProjectController {
         return "project/edit";
     }
 
-    /*****
-     프로젝트 수정
-     *****/
+    /** 프로젝트 수정 */
     @PostMapping("/edit/{projectId}")
     public String updateProject(
             @PathVariable Long projectId,
@@ -92,9 +89,7 @@ public class ProjectController {
         return "redirect:/project/detail/" + projectId;
     }
 
-    /*****
-     프로젝트 삭제
-     *****/
+    /** 프로젝트 삭제 */
     @PostMapping("/delete/{projectId}")
     public String deleteProject(
             @PathVariable Long projectId

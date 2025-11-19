@@ -117,8 +117,12 @@ public class EventService {
 
     // --- 월별 조회 (점 찍기 용) ---
     @Transactional(readOnly = true)
-    public List<EventMonthlyDotResponse> getMonthlyEvents(Long projectId, String username,
-                                                          int year, int month) {
+    public List<EventMonthlyDotResponse> getMonthlyEvents(
+            Long projectId,
+            String username,
+            int year,
+            int month
+    ) {
         Member member = getMemberOrThrow(username);
         Project project = getProjectOrThrow(projectId);
 
@@ -128,28 +132,29 @@ public class EventService {
         LocalDateTime rangeStart = firstDay.atStartOfDay();
         LocalDateTime rangeEnd   = lastDay.atTime(23, 59, 59);
 
-        // 1. 이 달과 기간이 겹치는 모든 이벤트 가져오기
+        // 1. 이 달과 기간이 겹치는 모든 이벤트
         List<Event> events =
                 eventRepository.findByProjectAndEndDateTimeGreaterThanEqualAndStartDateTimeLessThanEqual(
-                        project, rangeStart, rangeEnd);
+                        project, rangeStart, rangeEnd
+                );
 
-        // 2. 내가 볼 수 있는 이벤트만 남기기
+        // 2. 내가 볼 수 있는 이벤트만
         List<Event> visibleEvents = events.stream()
                 .filter(e -> canViewEvent(member, e))
                 .toList();
 
-        // 3. 이 달의 각 날짜에 대해 "하나라도 걸리는 이벤트가 있는지" 체크
+        // 3. 날짜별 일정 개수 계산
         List<EventMonthlyDotResponse> result = new ArrayList<>();
-        for (LocalDate d = firstDay; !d.isAfter(lastDay); d = d.plusDays(1)) {
 
-            // ★ 여기서 매번 새 final 변수 하나 만들어서 람다에 넘김
+        for (LocalDate d = firstDay; !d.isAfter(lastDay); d = d.plusDays(1)) {
             final LocalDate currentDate = d;
 
-            boolean hasEvent = visibleEvents.stream()
-                    .anyMatch(e -> occursOnDate(e, currentDate));
+            long count = visibleEvents.stream()
+                    .filter(e -> occursOnDate(e, currentDate))
+                    .count();
 
-            if (hasEvent) {
-                result.add(new EventMonthlyDotResponse(currentDate, true));
+            if (count > 0) {
+                result.add(EventMonthlyDotResponse.of(currentDate, (int) count));
             }
         }
 

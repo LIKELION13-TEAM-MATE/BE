@@ -10,5 +10,11 @@ import java.time.LocalDate;
 public class EventMonthlyDotResponse {
 
     private LocalDate date;
-    private boolean hasEvent; // 달력에 점(dot) 호출
+    private boolean hasEvent;
+    private int eventCount;
+
+    public static EventMonthlyDotResponse of(LocalDate date, int eventCount) {
+        boolean hasEvent = eventCount > 0;
+        return new EventMonthlyDotResponse(date, hasEvent, eventCount);
+    }
 }

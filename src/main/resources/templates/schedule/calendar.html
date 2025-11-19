@@ -135,11 +135,16 @@
         .day-number.today {
             border: 1px solid #3b82f6;
         }
-        .event-dot {
+        .event-dots {
             position: absolute;
             bottom: 3px;
             left: 50%;
             transform: translateX(-50%);
+            display: flex;
+            gap: 3px;
+        }
+
+        .event-dot {
             width: 4px;
             height: 4px;
             border-radius: 50%;
@@ -463,8 +468,9 @@
 
             const dotMap = {};
             dots.forEach(d => {
-                const dateStr = d.date;
-                dotMap[dateStr] = d.hasEvent;
+                const dateStr = d.date; // "2025-11-07"
+                const count = d.eventCount != null ? d.eventCount : (d.hasEvent ? 1 : 0);
+                dotMap[dateStr] = count;
             });
 
             let day = 1;
@@ -495,10 +501,19 @@
 
                     td.appendChild(span);
 
-                    if (dotMap[dateStr]) {
-                        const dot = document.createElement("div");
-                        dot.classList.add("event-dot");
-                        td.appendChild(dot);
+                    const eventCount = dotMap[dateStr] || 0;
+                    if (eventCount > 0) {
+                        const dotsWrapper = document.createElement("div");
+                        dotsWrapper.classList.add("event-dots");
+
+                        const dotsToShow = Math.min(eventCount, 4);
+                        for (let i = 0; i < dotsToShow; i++) {
+                            const dot = document.createElement("div");
+                            dot.classList.add("event-dot");
+                            dotsWrapper.appendChild(dot);
+                        }
+
+                        td.appendChild(dotsWrapper);
                     }
 
                     td.dataset.date = dateStr;

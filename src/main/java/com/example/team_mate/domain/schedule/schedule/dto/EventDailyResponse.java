@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @AllArgsConstructor
@@ -19,4 +20,6 @@ public class EventDailyResponse {
     private RepeatType repeatType;
     private Integer alarmOffsetMinutes;
     private boolean createdByMe;
+    private String creatorName;
+    private List<String> participantNames;
 }

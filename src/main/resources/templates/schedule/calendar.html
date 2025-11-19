@@ -178,6 +178,12 @@
         .event-item-time {
             font-size: 12px;
             color: #777;
+            margin-top: 2px;
+        }
+        .event-item-people {
+            font-size: 12px;
+            color: #777;
+            margin-top: 2px;
         }
         .empty-message {
             font-size: 12px;
@@ -569,16 +575,15 @@
 
                         const time = document.createElement("div");
                         time.classList.add("event-item-time");
-                        if (ev.allDay) {
-                            time.textContent = "하루 종일";
-                        } else {
-                            const start = ev.startDateTime.replace("T", " ");
-                            const end = ev.endDateTime.replace("T", " ");
-                            time.textContent = `${start} ~ ${end}`;
-                        }
+                        time.textContent = formatEventTime(ev);
+
+                        const people = document.createElement("div");
+                        people.classList.add("event-item-people");
+                        people.textContent = formatPeople(ev);
 
                         li.appendChild(title);
                         li.appendChild(time);
+                        li.appendChild(people);
 
                         li.addEventListener("click", () => {
                             window.location.href =
@@ -703,6 +708,47 @@
             const d = new Date(year, month - 1, day);
             const weekday = weekdayNames[d.getDay()];
             return `${day}일 ${weekday}`;
+        }
+
+        // ---- 시간 포맷팅 ----
+        function formatEventTime(ev) {
+            const start = new Date(ev.startDateTime);
+            const end = new Date(ev.endDateTime);
+
+            const isSameDay =
+                start.getFullYear() === end.getFullYear() &&
+                start.getMonth() === end.getMonth() &&
+                start.getDate() === end.getDate();
+
+            // 하루종일 + 같은 날짜
+            if (ev.allDay && isSameDay) {
+                return "하루 종일";
+            }
+
+            // 여러 날짜에 걸친 일정: M월 D일 ~ M월 D일
+            if (!isSameDay) {
+                return `${start.getMonth() + 1}월 ${start.getDate()}일 ~ ${end.getMonth() + 1}월 ${end.getDate()}일`;
+            }
+
+            // 하루 일정: 10:00 AM ~ 18:00 PM 형태
+            return `${toAMPM(start)} ~ ${toAMPM(end)}`;
+        }
+
+        function toAMPM(date) {
+            const hours = String(date.getHours()).padStart(2, "0");
+            const minutes = String(date.getMinutes()).padStart(2, "0");
+            const ampm = Number(hours) >= 12 ? "PM" : "AM";
+            return `${hours}:${minutes} ${ampm}`;
+        }
+
+        // ---- 사람 정보 포맷팅 ----
+        function formatPeople(ev) {
+            const creator = ev.creatorName || "작성자";
+            const participants = (ev.participantNames || []).join(", ");
+
+            if (!participants) return creator;
+
+            return `${creator} with ${participants}`;
         }
     });
 </script>

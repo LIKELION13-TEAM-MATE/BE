@@ -182,23 +182,34 @@ public class EventService {
         return events.stream()
                 .filter(e -> canViewEvent(member, e))
                 .filter(e -> occursOnDate(e, date))
-                .map(e -> new EventDailyResponse(
-                        e.getId(),
-                        e.getTitle(),
-                        e.getMemo(),
-                        e.getStartDateTime(),
-                        e.getEndDateTime(),
-                        e.isAllDay(),
-                        e.getRepeatType(),
-                        e.getAlarmOffsetMinutes(),
-                        e.getCreatedBy().getId().equals(member.getId())
-                ))
+                .map(e -> {
+                    // 내가 만든 일정인지 여부
+                    boolean createdByMe = e.getCreatedBy().getId().equals(member.getId());
+
+                    String creatorName = e.getCreatedBy().getNickname();
+
+                    List<String> participantNames = e.getParticipants().stream()
+                            .map(p -> p.getMember().getNickname())
+                            .collect(Collectors.toList());
+
+                    return new EventDailyResponse(
+                            e.getId(),
+                            e.getTitle(),
+                            e.getMemo(),
+                            e.getStartDateTime(),
+                            e.getEndDateTime(),
+                            e.isAllDay(),
+                            e.getRepeatType(),
+                            e.getAlarmOffsetMinutes(),
+                            createdByMe,
+                            creatorName,
+                            participantNames
+                    );
+                })
                 .collect(Collectors.toList());
     }
 
-
     // --- 상세 조회 ---
-
     @Transactional(readOnly = true)
     public Event getEventDetail(Long projectId, Long eventId, String username) {
         Member member = getMemberOrThrow(username);

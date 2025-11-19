@@ -546,7 +546,7 @@
 
         // ---- 일별 일정 리스트 로드 ----
         async function loadDailyEvents(dateStr) {
-            selectedDateLabel.textContent = dateStr.replace(/-/g, ".") + " 일정";
+            selectedDateLabel.textContent = formatKoreanDateLabel(dateStr);
 
             const url = `/project/${projectId}/events/api/day?date=${dateStr}`;
             try {
@@ -693,6 +693,17 @@
 
         // 초기 렌더
         loadMonthlyDots();
+
+        // 현재 날짜 표시 (예: "7일 목")
+        const weekdayNames = ["일", "월", "화", "수", "목", "금", "토"];
+
+        function formatKoreanDateLabel(dateStr) {
+            // dateStr: "2025-11-07"
+            const [year, month, day] = dateStr.split("-").map(Number);
+            const d = new Date(year, month - 1, day);
+            const weekday = weekdayNames[d.getDay()];
+            return `${day}일 ${weekday}`;
+        }
     });
 </script>
 

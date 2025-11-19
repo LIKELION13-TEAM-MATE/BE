@@ -18,9 +18,7 @@ public class TeamService {
     private final MemberRepository memberRepository;
     private final ProjectRepository projectRepository;
 
-    /*****
-     팀원 초대
-     *****/
+    /** 팀원 초대 */
     @Transactional
     public void inviteMember(Long projectId, String usernameToInvite) {
 
@@ -48,9 +46,7 @@ public class TeamService {
         teamMembershipRepository.save(newMembership);
     }
 
-    /*****
-      팀원 강퇴
-     *****/
+    /** 팀원 강퇴 */
     @Transactional
     public void kickMember(Long projectId, Long membershipId, String requesterUsername) {
 

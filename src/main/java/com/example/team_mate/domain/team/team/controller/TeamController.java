@@ -15,9 +15,7 @@ public class TeamController {
 
     private final TeamService teamService;
 
-    /*****
-     팀원 초대 form
-     *****/
+    /** 팀원 초대 form */
     @PostMapping("/project/detail/{projectId}/invite")
     public String inviteMember(
             @PathVariable Long projectId,
@@ -26,16 +24,14 @@ public class TeamController {
     ) {
         try {
             teamService.inviteMember(projectId, username);
-            redirectAttributes.addFlashAttribute("successMessage", "팀원을 성공적으로 초대했습니다!");
+            redirectAttributes.addFlashAttribute("inviteSuccessMessage", "팀원을 성공적으로 초대했습니다!");
         } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            redirectAttributes.addFlashAttribute("inviteErrorMessage", e.getMessage());
         }
         return "redirect:/project/detail/" + projectId;
     }
 
-    /*****
-     팀원 강퇴
-     *****/
+    /** 팀원 강퇴 */
     @PostMapping("/project/{projectId}/kick/{membershipId}")
     public String kickMember(
             @PathVariable Long projectId,

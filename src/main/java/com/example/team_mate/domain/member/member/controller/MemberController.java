@@ -20,7 +20,7 @@ public class MemberController {
         this.memberService = memberService;
     }
 
-    // 회원가입 페이지
+    /** 회원가입 */
     @GetMapping("/signup")
     public String signupForm() {
         return "member/signup";
@@ -42,13 +42,13 @@ public class MemberController {
         }
     }
 
-    // 로그인 페이지
+    /** 로그인 */
     @GetMapping("/login")
     public String loginForm() {
         return "member/login";
     }
 
-    // welcome 페이지
+    /** 환영 페이지 */
     @GetMapping("/welcome")
     public String welcome(Model model, Authentication authentication) {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();

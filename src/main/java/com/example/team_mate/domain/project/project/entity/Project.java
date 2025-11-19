@@ -6,6 +6,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 @Entity
 @Getter
@@ -43,6 +44,27 @@ public class Project {
     // 이 프로젝트의 참가자
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.List<com.example.team_mate.domain.team.team.entity.TeamMembership> teamMemberships = new java.util.ArrayList<>();
+
+    // D-Day 계산 메서드
+    public String getDDay() {
+        LocalDate today = LocalDate.now();
+
+        // 마감일이 없으면 빈칸 반환
+        if (this.deadline == null) {
+            return "";
+        }
+
+        // (마감일 - 오늘)
+        long daysBetween = ChronoUnit.DAYS.between(today, this.deadline);
+
+        if (daysBetween == 0) {
+            return "D-Day"; // 오늘이 마감일
+        } else if (daysBetween > 0) {
+            return "D-" + daysBetween; // 마감일이 남음 (예: D-3)
+        } else {
+            return "D+" + Math.abs(daysBetween); // 마감일 지남 (예: D+1)
+        }
+    }
 
 
 }

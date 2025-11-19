@@ -36,7 +36,8 @@ out/
 ### VS Code ###
 .vscode/
 
-# .gitignore 파일의 맨 아래에 추가
-
 # Docker volumes
 _vol/
+
+### Uploads ###
+uploads/

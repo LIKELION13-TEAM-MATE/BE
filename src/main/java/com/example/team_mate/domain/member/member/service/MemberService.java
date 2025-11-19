@@ -16,7 +16,7 @@ public class MemberService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // 회원가입
+    /** 회원가입 */
     public Member signup(String username, String nickname, String password, String passwordConfirm) {
 
         if (!password.equals(passwordConfirm)) {
@@ -41,7 +41,7 @@ public class MemberService {
         return memberRepository.save(member);
     }
 
-    // 로그인
+    /** 로그인 */
     public Member login(String username, String password) {
         return memberRepository.findByUsername(username)
                 .filter(m -> passwordEncoder.matches(password, m.getPassword()))

@@ -135,11 +135,16 @@
         .day-number.today {
             border: 1px solid #3b82f6;
         }
-        .event-dot {
+        .event-dots {
             position: absolute;
             bottom: 3px;
             left: 50%;
             transform: translateX(-50%);
+            display: flex;
+            gap: 3px;
+        }
+
+        .event-dot {
             width: 4px;
             height: 4px;
             border-radius: 50%;
@@ -173,11 +178,110 @@
         .event-item-time {
             font-size: 12px;
             color: #777;
+            margin-top: 2px;
+        }
+        .event-item-people {
+            font-size: 12px;
+            color: #777;
+            margin-top: 2px;
         }
         .empty-message {
             font-size: 12px;
             color: #aaa;
             margin-top: 4px;
+        }
+
+        /* --- 상세 패널 --- */
+        .event-detail-section {
+            margin-top: 16px;
+            padding: 12px 10px 10px;
+            border-top: 1px solid #eee;
+            background-color: #fafafa;
+            border-radius: 12px;
+        }
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+        .detail-header button {
+            border: none;
+            background: none;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .detail-delete {
+            color: #ef4444;
+        }
+        .detail-edit {
+            color: #3b82f6;
+        }
+        .detail-title-input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            font-weight: 600;
+            padding: 0;
+            margin-bottom: 4px;
+        }
+        .detail-title-input:disabled {
+            color: #111827;
+        }
+        .detail-datetime {
+            font-size: 12px;
+            color: #555;
+            white-space: pre-line;
+            margin-bottom: 10px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 4px 0;
+            gap: 8px;
+        }
+        .detail-label {
+            font-size: 12px;
+            color: #555;
+        }
+        .detail-input {
+            flex: 1;
+            font-size: 12px;
+            padding: 4px 6px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            background-color: #fff;
+        }
+        .detail-input:disabled {
+            background-color: #f9fafb;
+            color: #6b7280;
+        }
+        .detail-memo-wrapper {
+            margin-top: 6px;
+        }
+        .detail-memo {
+            width: 100%;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            padding: 6px 8px;
+            font-size: 12px;
+            resize: vertical;
+            min-height: 60px;
+            background-color: #fff;
+        }
+        .detail-memo:disabled {
+            background-color: #f9fafb;
+            color: #6b7280;
+        }
+        .detail-edit-actions {
+            display: none;
+            margin-top: 8px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
         }
 
         /* --- 일정 생성 폼 --- */
@@ -322,6 +426,57 @@
                 등록된 일정이 없습니다.
             </div>
 
+            <!-- 상세 보기 패널 -->
+            <section id="eventDetailSection" class="event-detail-section" style="display:none;">
+                <div class="detail-header">
+                    <button type="button" class="detail-delete" id="deleteEventBtn">삭제</button>
+                    <button type="button" class="detail-edit" id="editEventBtn">편집</button>
+                </div>
+
+                <input id="detailTitle" class="detail-title-input" type="text" disabled>
+
+                <div class="detail-datetime" id="detailDatetime"></div>
+
+                <div class="detail-row">
+                    <span class="detail-label">반복</span>
+                    <select id="detailRepeatType" class="detail-input" disabled>
+                        <option value="NONE">안 함</option>
+                        <option value="DAILY">매일</option>
+                        <option value="WEEKLY">매주</option>
+                        <option value="BIWEEKLY">2주마다</option>
+                        <option value="MONTHLY">매월</option>
+                        <option value="YEARLY">매년</option>
+                    </select>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">알림</span>
+                    <select id="detailAlarm" class="detail-input" disabled>
+                        <option value="">없음</option>
+                        <option value="10">10분 전</option>
+                        <option value="60">1시간 전</option>
+                        <option value="120">2시간 전</option>
+                    </select>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">동업자</span>
+                    <input id="detailParticipants" class="detail-input" type="text" disabled>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">메모</span>
+                </div>
+                <div class="detail-memo-wrapper">
+                    <textarea id="detailMemo" class="detail-memo" rows="3" disabled></textarea>
+                </div>
+
+                <div class="detail-edit-actions" id="detailEditActions">
+                    <button type="button" class="btn-secondary" id="detailCancelBtn">취소</button>
+                    <button type="button" class="btn-primary" id="detailSaveBtn">저장</button>
+                </div>
+            </section>
+
             <div class="event-form-toggle">
                 <button type="button" id="toggleFormBtn">+ 일정 추가</button>
             </div>
@@ -367,7 +522,7 @@
                     </select>
                 </div>
 
-                <div class="form-row">
+                <div class="form-row">                                          // 다이얼은 프론트에서 작업
                     <label for="alarmOffsetMinutes">알림</label>
                     <select id="alarmOffsetMinutes" name="alarmOffsetMinutes">
                         <option value="">없음</option>
@@ -421,13 +576,27 @@
         const toggleFormBtn = document.getElementById("toggleFormBtn");
         const eventForm = document.getElementById("eventForm");
         const cancelFormBtn = document.getElementById("cancelFormBtn");
-
         const participantSelect = document.getElementById("participantIds");
+
+        // 상세 패널 요소
+        const eventDetailSection = document.getElementById("eventDetailSection");
+        const detailTitle = document.getElementById("detailTitle");
+        const detailDatetime = document.getElementById("detailDatetime");
+        const detailRepeatType = document.getElementById("detailRepeatType");
+        const detailAlarm = document.getElementById("detailAlarm");
+        const detailParticipants = document.getElementById("detailParticipants");
+        const detailMemo = document.getElementById("detailMemo");
+        const editEventBtn = document.getElementById("editEventBtn");
+        const deleteEventBtn = document.getElementById("deleteEventBtn");
+        const detailEditActions = document.getElementById("detailEditActions");
+        const detailSaveBtn = document.getElementById("detailSaveBtn");
+        const detailCancelBtn = document.getElementById("detailCancelBtn");
 
         let current = new Date();
         let currentYear = current.getFullYear();
         let currentMonth = current.getMonth() + 1; // 1~12
         let selectedDate = null; // '2025-11-07'
+        let selectedEvent = null; // 상세 패널에 표시 중인 이벤트
 
         // ---- 동업자 "모두" 선택 ----
         if (participantSelect) {
@@ -463,8 +632,9 @@
 
             const dotMap = {};
             dots.forEach(d => {
-                const dateStr = d.date;
-                dotMap[dateStr] = d.hasEvent;
+                const dateStr = d.date; // "2025-11-07"
+                const count = d.eventCount != null ? d.eventCount : (d.hasEvent ? 1 : 0);
+                dotMap[dateStr] = count;
             });
 
             let day = 1;
@@ -495,10 +665,19 @@
 
                     td.appendChild(span);
 
-                    if (dotMap[dateStr]) {
-                        const dot = document.createElement("div");
-                        dot.classList.add("event-dot");
-                        td.appendChild(dot);
+                    const eventCount = dotMap[dateStr] || 0;
+                    if (eventCount > 0) {
+                        const dotsWrapper = document.createElement("div");
+                        dotsWrapper.classList.add("event-dots");
+
+                        const dotsToShow = Math.min(eventCount, 4);
+                        for (let i = 0; i < dotsToShow; i++) {
+                            const dot = document.createElement("div");
+                            dot.classList.add("event-dot");
+                            dotsWrapper.appendChild(dot);
+                        }
+
+                        td.appendChild(dotsWrapper);
                     }
 
                     td.dataset.date = dateStr;
@@ -531,7 +710,7 @@
 
         // ---- 일별 일정 리스트 로드 ----
         async function loadDailyEvents(dateStr) {
-            selectedDateLabel.textContent = dateStr.replace(/-/g, ".") + " 일정";
+            selectedDateLabel.textContent = formatKoreanDateLabel(dateStr);
 
             const url = `/project/${projectId}/events/api/day?date=${dateStr}`;
             try {
@@ -542,6 +721,8 @@
                 eventList.innerHTML = "";
                 if (events.length === 0) {
                     emptyMessage.style.display = "block";
+                    eventDetailSection.style.display = "none";
+                    selectedEvent = null;
                 } else {
                     emptyMessage.style.display = "none";
                     events.forEach(ev => {
@@ -554,24 +735,30 @@
 
                         const time = document.createElement("div");
                         time.classList.add("event-item-time");
-                        if (ev.allDay) {
-                            time.textContent = "하루 종일";
-                        } else {
-                            const start = ev.startDateTime.replace("T", " ");
-                            const end = ev.endDateTime.replace("T", " ");
-                            time.textContent = `${start} ~ ${end}`;
-                        }
+                        time.textContent = formatEventTime(ev);
+
+                        const people = document.createElement("div");
+                        people.classList.add("event-item-people");
+                        people.textContent = formatPeople(ev);
 
                         li.appendChild(title);
                         li.appendChild(time);
+                        li.appendChild(people);
 
-                        li.addEventListener("click", () => {
-                            window.location.href =
-                                `/project/${projectId}/events/${ev.eventId}`;
+                        li.addEventListener("click", (e) => {
+                            e.stopPropagation();
+                            selectedEvent = ev;
+                            showEventDetail(ev);
                         });
 
                         eventList.appendChild(li);
                     });
+
+                    // 첫 번째 일정 자동 선택 (선택된 게 없을 때)
+                    if (!selectedEvent && events.length > 0) {
+                        selectedEvent = events[0];
+                        showEventDetail(events[0]);
+                    }
                 }
 
                 // 선택 표시 새로 그리기
@@ -579,6 +766,30 @@
             } catch (e) {
                 console.error(e);
             }
+        }
+
+        // ---- 상세 패널 표시 ----
+        function showEventDetail(ev) {
+            if (!ev) return;
+            eventDetailSection.style.display = "block";
+
+            detailTitle.value = ev.title || "";
+            detailDatetime.textContent = formatDetailDatetime(ev);
+            detailRepeatType.value = ev.repeatType || "NONE";
+            detailAlarm.value = ev.alarmOffsetMinutes != null ? String(ev.alarmOffsetMinutes) : "";
+            detailParticipants.value = (ev.participantNames || []).join(", ");
+            detailMemo.value = ev.memo || "";
+
+            setDetailEditMode(false);
+        }
+
+        function setDetailEditMode(isEdit) {
+            detailTitle.disabled = !isEdit;
+            detailRepeatType.disabled = !isEdit;
+            detailAlarm.disabled = !isEdit;
+            detailMemo.disabled = !isEdit;
+
+            detailEditActions.style.display = isEdit ? "flex" : "none";
         }
 
         // ---- 일정 추가 폼 토글 ----
@@ -657,6 +868,95 @@
             }
         });
 
+        // ---- 상세 편집 / 삭제 ----
+        editEventBtn.addEventListener("click", () => {
+            if (!selectedEvent) return;
+            setDetailEditMode(true);
+        });
+
+        detailCancelBtn.addEventListener("click", () => {
+            if (!selectedEvent) return;
+            showEventDetail(selectedEvent); // 원래 값으로 롤백
+        });
+
+        detailSaveBtn.addEventListener("click", async () => {
+            if (!selectedEvent) return;
+
+            const payload = {
+                // 기존 값 유지 + 수정 가능한 필드만 덮어쓰기
+                title: detailTitle.value,
+                memo: detailMemo.value,
+                allDay: selectedEvent.allDay,
+                startDateTime: selectedEvent.startDateTime,
+                endDateTime: selectedEvent.endDateTime,
+                repeatType: detailRepeatType.value,
+                alarmOffsetMinutes: detailAlarm.value || null,
+                participantIds: selectedEvent.participantIds || [],
+                visibleToParticipantsOnly: selectedEvent.visibleToParticipantsOnly || false
+            };
+
+            try {
+                const res = await fetch(`/project/${projectId}/events/${selectedEvent.eventId}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    alert("일정 수정에 실패했습니다.");
+                    return;
+                }
+
+                selectedEvent = {
+                    ...selectedEvent,
+                    title: detailTitle.value,
+                    memo: detailMemo.value,
+                    repeatType: detailRepeatType.value,
+                    alarmOffsetMinutes: detailAlarm.value || null
+                };
+
+                // 리스트/캘린더 다시 그리기 (점/텍스트 최신화용)
+                if (selectedDate) {
+                    await loadDailyEvents(selectedDate);
+                } else {
+                    await loadMonthlyDots();
+                }
+
+                // 상세 패널은 우리가 들고 있는 selectedEvent로 다시 보여주기
+                showEventDetail(selectedEvent);
+                setDetailEditMode(false);
+            } catch (err) {
+                console.error(err);
+                alert("일정 수정 중 오류가 발생했습니다.");
+            }
+        });
+
+
+        deleteEventBtn.addEventListener("click", async () => {
+            if (!selectedEvent) return;
+            if (!confirm("이 일정을 삭제할까요?")) return;
+
+            try {
+                const res = await fetch(`/project/${projectId}/events/${selectedEvent.eventId}`, {
+                    method: "DELETE"
+                });
+
+                if (!res.ok) {
+                    alert("일정 삭제에 실패했습니다.");
+                    return;
+                }
+
+                selectedEvent = null;
+                eventDetailSection.style.display = "none";
+                await loadDailyEvents(selectedDate);
+            } catch (err) {
+                console.error(err);
+                alert("일정 삭제 중 오류가 발생했습니다.");
+            }
+        });
+
         // ---- 월 이동 버튼 ----
         prevMonthBtn.addEventListener("click", () => {
             currentMonth--;
@@ -678,6 +978,93 @@
 
         // 초기 렌더
         loadMonthlyDots();
+
+        // 현재 날짜 표시 (예: "7일 목")
+        const weekdayNames = ["일", "월", "화", "수", "목", "금", "토"];
+
+        function formatKoreanDateLabel(dateStr) {
+            // dateStr: "2025-11-07"
+            const [year, month, day] = dateStr.split("-").map(Number);
+            const d = new Date(year, month - 1, day);
+            const weekday = weekdayNames[d.getDay()];
+            return `${day}일 ${weekday}`;
+        }
+
+        // ---- 시간 포맷팅 (리스트용) ----
+        function formatEventTime(ev) {
+            const start = new Date(ev.startDateTime);
+            const end = new Date(ev.endDateTime);
+
+            const isSameDay =
+                start.getFullYear() === end.getFullYear() &&
+                start.getMonth() === end.getMonth() &&
+                start.getDate() === end.getDate();
+
+            // 하루종일 + 같은 날짜
+            if (ev.allDay && isSameDay) {
+                return "하루 종일";
+            }
+
+            // 여러 날짜에 걸친 일정: M월 D일 ~ M월 D일
+            if (!isSameDay) {
+                return `${start.getMonth() + 1}월 ${start.getDate()}일 ~ ${end.getMonth() + 1}월 ${end.getDate()}일`;
+            }
+
+            // 하루 일정: 10:00 AM ~ 18:00 PM 형태
+            return `${toAMPM(start)} ~ ${toAMPM(end)}`;
+        }
+
+        function toAMPM(date) {
+            const hours = String(date.getHours()).padStart(2, "0");
+            const minutes = String(date.getMinutes()).padStart(2, "0");
+            const ampm = Number(hours) >= 12 ? "PM" : "AM";
+            return `${hours}:${minutes} ${ampm}`;
+        }
+
+        // ---- 상세 날짜/시간 포맷 (상세 패널용) ----
+        function formatDetailDatetime(ev) {
+            const start = new Date(ev.startDateTime);
+            const end = new Date(ev.endDateTime);
+
+            const weekday = weekdayNames[start.getDay()];
+            const dateLine = `${start.getFullYear()}년 ${start.getMonth() + 1}월 ${start.getDate()}일 ${weekday}요일`;
+
+            const isSameDay =
+                start.getFullYear() === end.getFullYear() &&
+                start.getMonth() === end.getMonth() &&
+                start.getDate() === end.getDate();
+
+            let timeLine;
+            if (ev.allDay && isSameDay) {
+                timeLine = "하루 종일";
+            } else if (!isSameDay) {
+                timeLine = `${start.getMonth() + 1}월 ${start.getDate()}일 ~ ${end.getMonth() + 1}월 ${end.getDate()}일`;
+            } else {
+                timeLine = `${toAmPmKorean(start)} ~ ${toAmPmKorean(end)}`;
+            }
+
+            return `${dateLine}\n${timeLine}`;
+        }
+
+        function toAmPmKorean(date) {
+            let hours = date.getHours();
+            const minutes = String(date.getMinutes()).padStart(2, "0");
+            const isPm = hours >= 12;
+            const prefix = isPm ? "오후" : "오전";
+            hours = hours % 12;
+            if (hours === 0) hours = 12;
+            return `${prefix} ${hours}:${minutes}`;
+        }
+
+        // ---- 사람 정보 포맷팅 ----
+        function formatPeople(ev) {
+            const creator = ev.creatorName || "작성자";
+            const participants = (ev.participantNames || []).join(", ");
+
+            if (!participants) return creator;
+
+            return `${creator} with ${participants}`;
+        }
     });
 </script>
 

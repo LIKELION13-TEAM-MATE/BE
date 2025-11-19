@@ -226,7 +226,6 @@ public class EventService {
     }
 
     // --- 수정 ---
-
     @Transactional
     public void updateEvent(Long projectId, Long eventId, String username,
                             EventUpdateRequest request) {
@@ -273,7 +272,6 @@ public class EventService {
     }
 
     // --- 삭제 ---
-
     @Transactional
     public void deleteEvent(Long projectId, Long eventId, String username) {
 

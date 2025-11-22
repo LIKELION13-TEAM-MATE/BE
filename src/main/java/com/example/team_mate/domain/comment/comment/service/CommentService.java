@@ -20,14 +20,15 @@ public class CommentService {
 
     /** 댓글 작성 */
     @Transactional
-    public void writeComment(Long postId, String username, String content) {
+    public Comment writeComment(Long postId, String username, String content) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글 없음"));
         Member author = memberRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("유저 없음"));
 
         Comment comment = new Comment(content, post, author);
-        commentRepository.save(comment);
+        Comment saved = commentRepository.save(comment);
+        return saved;
     }
 
     /** 댓글 삭제 */

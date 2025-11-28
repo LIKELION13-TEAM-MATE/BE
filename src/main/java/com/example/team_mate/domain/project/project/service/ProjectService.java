@@ -89,4 +89,43 @@ public class ProjectService {
     public void deleteProject(Long projectId) {
         projectRepository.deleteById(projectId);
     }
+
+    /** 중요 표시 토글 */
+    @Transactional
+    public void toggleImportant(Long projectId) {
+        Project project = findProjectById(projectId);
+        project.toggleImportant();
+    }
+
+    /** 진행 중인 프로젝트 목록 조회(메인홈용) */
+    @Transactional(readOnly = true)
+    public List<Project> getOngoingProjects(String username) {
+        List<Project> allMyProjects = findMyProjects(username);
+
+        return allMyProjects.stream()
+                .filter(p -> !p.isCompleted()) // 완료되지 않은 것만 필터링
+                .sorted((p1, p2) -> {
+                    // 중요 체크
+                    if (p1.isImportant() != p2.isImportant()) {
+                        return p1.isImportant() ? -1 : 1;
+                    }
+                    // 마감일 비교: 마감일 빠른 게 앞으로
+                    if (p1.getDeadline() != null && p2.getDeadline() != null) {
+                        return p1.getDeadline().compareTo(p2.getDeadline());
+                    }
+                    return 0;
+                })
+                .collect(Collectors.toList());
+    }
+
+    /** 완료된 프로젝트 목록 조회(보관함용) */
+    @Transactional(readOnly = true)
+    public List<Project> getCompletedProjects(String username) {
+        List<Project> allMyProjects = findMyProjects(username);
+
+        return allMyProjects.stream()
+                .filter(Project::isCompleted) // 완료된 것만 필터링
+                .collect(Collectors.toList());
+    }
+
 }

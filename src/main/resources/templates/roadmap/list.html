@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>로드맵</title>
+</head>
+<body>
+
+<p>
+    <a th:href="@{/home/main}">&lt;</a>
+</p>
+<h2 th:text="${project.projectName}">프로젝트 이름</h2>
+
+<p>
+    <a th:href="@{/project/detail/{id}(id=${projectId})}">게시판</a> |
+    <a th:href="@{/project/{id}/roles(id=${project.id})}">역할</a> |
+    <a th:href="@{/project/{projectId}/events/calendar(projectId=${projectId})}">일정</a> |
+    <span>로드맵</span>
+</p>
+<hr/>
+
+<div>
+    <h3>
+        전체 진행률: <span th:text="${totalProgress}">0</span>%
+    </h3>
+
+    <h3>
+        <span th:text="${project.dDay}">(D-Day)</span>
+    </h3>
+
+    <p>
+        단계 <span th:text="${completedCount}">0</span> / <span th:text="${totalCount}">0</span>
+    </p>
+
+    <p>
+        <a th:href="@{/project/{id}/roadmap/create(id=${project.id})}">단계 추가</a>
+    </p>
+</div>
+<hr/>
+
+<!--각 단계-->
+<div th:each="roadmap : ${roadmaps}">
+
+    <div>
+        <strong th:text="${roadmap.role}">1단계</strong>
+        <h3><span th:text="${roadmap.title}">기획</span></h3>
+        <!--동업자 정보-->
+        <div style="display: flex; gap: 10px; margin-top: 5px;">
+            <div th:each="rm : ${roadmap.members}" style="display: flex; align-items: center;">
+                <div th:if="${rm.member.nickname != null}"
+                     th:style="|background-color: ${rm.member.avatarColor};
+                       width: 24px; height: 24px; border-radius: 50%;
+                       display: flex; align-items: center; justify-content: center;
+                       color: white; font-weight: bold; font-size: 0.8em; margin-right: 5px;|">
+                    <span th:text="${rm.member.initial}"></span>
+                </div>
+                <span th:text="${rm.member.nickname}" style="font-size: 0.9em; color: #555;">이름</span>
+            </div>
+        </div>
+        <!--수정&삭제-->
+        <div>
+            <a th:href="@{/roadmap/{rid}/edit(rid=${roadmap.id}, projectId=${project.id})}" style="text-decoration: none;">수정</a>
+
+            <form th:action="@{/roadmap/{rid}/delete(rid=${roadmap.id})}" method="post" style="display:inline;">
+                <input type="hidden" name="projectId" th:value="${project.id}"/>
+                <button type="submit" onclick="return confirm('이 단계를 정말 삭제하시겠습니까? 포함된 Task도 모두 삭제됩니다.')">
+                    삭제
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div>
+        <span>~</span><span th:text="${roadmap.deadline}">2025-11-11</span>
+        <br/>
+        <span>진행률: </span><span th:text="${roadmap.progress}">0</span>%
+    </div>
+
+    <!--Task-->
+    <ul style="list-style: none; padding-left: 0;">
+        <li th:each="task : ${roadmap.tasks}">
+
+            <form th:action="@{/roadmap/{taskId}/check(taskId=${task.id})}" method="post" style="display:inline;">
+                <input type="hidden" name="projectId" th:value="${project.id}"/>
+                <button type="submit">
+                    <span th:if="${task.checked}">✅</span>
+                    <span th:unless="${task.checked}">⬜</span>
+                </button>
+            </form>
+
+            <span th:text="${task.content}">할 일 내용</span>
+
+            <!--주석(Comment) 입력 버튼-->
+            <button type="button" th:onclick="'toggleNoteForm(' + ${task.id} + ')'">💬</button>
+
+            <!--Task 삭제-->
+            <form th:action="@{/roadmap/task/{taskId}/delete(taskId=${task.id})}" method="post" style="display:inline;">
+                <input type="hidden" name="projectId" th:value="${project.id}"/>
+                <button type="submit" onclick="return confirm('삭제하시겠습니까?')">X</button>
+            </form>
+
+            <!--주석내용-->
+            <div th:if="${task.note != null && !task.note.isEmpty()}">
+                <small><span th:text="${task.note}">내용</span></small>
+            </div>
+
+            <!--주석 입력란-->
+            <div th:id="'noteForm-' + ${task.id}" style="display: none;">
+                <form th:action="@{/roadmap/task/{taskId}/note(taskId=${task.id})}" method="post">
+                    <input type="hidden" name="projectId" th:value="${project.id}"/>
+                    <input type="text" name="note" th:value="${task.note}" placeholder="주석 입력">
+                    <button type="submit">등록</button>
+                </form>
+            </div>
+        </li>
+    </ul>
+
+    <!--Task 입력-->
+    <form th:action="@{/roadmap/{rid}/task/add(rid=${roadmap.id})}" method="post">
+        <input type="hidden" name="projectId" th:value="${project.id}"/>
+        <input type="text" name="content" placeholder="세부 Task 입력" required>
+        <button type="submit">등록</button>
+    </form>
+
+    <hr/> </div>
+
+<script>
+    function toggleNoteForm(taskId) {
+        var formDiv = document.getElementById('noteForm-' + taskId);
+        if (formDiv.style.display === 'none') {
+            formDiv.style.display = 'block';
+        } else {
+            formDiv.style.display = 'none';
+        }
+    }
+</script>
+
+</body>
+</html>

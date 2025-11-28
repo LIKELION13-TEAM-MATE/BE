@@ -4,7 +4,7 @@
     <title>프로젝트 수정</title>
 </head>
 <body>
-<p><a th:href="@{/home/main}">메인화면</a></p>
+<p><a th:href="@{/project/archive}"><</a></p>
 
 <h1>프로젝트 수정하기</h1>
 
@@ -28,7 +28,7 @@
     <button type="submit">완료</button>
 </form>
 
-<p><a th:href="@{'/project/detail/' + ${project.id}}">취소</a></p>
+<p><a th:href="@{/project/archive}">취소</a></p>
 
 </body>
 </html>

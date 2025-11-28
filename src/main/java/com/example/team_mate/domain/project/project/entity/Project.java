@@ -21,6 +21,7 @@ public class Project {
     private String category;    // 카테고리
     private LocalDate deadline; // 마감일
     private String themeColor;  // 테마 색상
+    private boolean important; //중요도
 
     @ManyToOne(fetch = FetchType.LAZY) // 지연 로딩으로 성능 최적화
     @JoinColumn(name = "leader_id")
@@ -66,5 +67,14 @@ public class Project {
         }
     }
 
+    // 중요 표시 토글 메서드
+    public void toggleImportant() {
+        this.important = !this.important;
+    }
+
+    // 완료된 프로젝트 확인 메서드 (마감일 지났거나, 진행률 100%면 완료로 간주)
+    public boolean isCompleted() {
+        return this.deadline != null && this.deadline.isBefore(LocalDate.now());
+    }
 
 }

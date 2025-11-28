@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.util.List;
-
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/project")
@@ -37,18 +35,6 @@ public class ProjectController {
         Project newProject = projectService.createProject(request, username);
 
         return "redirect:/project/detail/" + newProject.getId();
-    }
-
-    /** 프로젝트 목록 */
-    @GetMapping("/list")
-    public String showMyProjectList(Model model, Authentication authentication) {
-
-        String username = authentication.getName();
-
-        List<Project> myProjects = projectService.findMyProjects(username);
-
-        model.addAttribute("projects", myProjects);
-        return "project/list";
     }
 
     /** 프로젝트 detail */
@@ -95,6 +81,26 @@ public class ProjectController {
             @PathVariable Long projectId
     ) {
         projectService.deleteProject(projectId);
-        return "redirect:/project/list";
+        return "redirect:/project/archive";
+    }
+
+    /** 프로젝트 보관함 */
+    @GetMapping("/archive")
+    public String showArchive(Model model, Authentication authentication) {
+        String username = authentication.getName();
+
+        // 진행 중인 프로젝트
+        model.addAttribute("ongoingProjects", projectService.getOngoingProjects(username));
+        // 완료된 프로젝트
+        model.addAttribute("completedProjects", projectService.getCompletedProjects(username));
+
+        return "project/archive"; // project/archive.html
+    }
+
+    /** 중요 표시 토글 처리 */
+    @PostMapping("/{projectId}/important")
+    public String toggleImportant(@PathVariable Long projectId) {
+        projectService.toggleImportant(projectId);
+        return "redirect:/project/archive";
     }
 }

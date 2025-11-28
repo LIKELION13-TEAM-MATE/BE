@@ -33,6 +33,7 @@ public class ProjectRoleController {
 
         // 카테고리, 프로젝트 이름
         Project project = projectService.findProjectById(projectId);
+        model.addAttribute("project", project);
         model.addAttribute("category", project.getCategory());
         model.addAttribute("projectName", project.getProjectName());
 

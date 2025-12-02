@@ -12,8 +12,11 @@ public class MemberSignUpRequest {
     @Schema(description = "아이디", example = "string")
     private String username;
 
-    @Schema(description = "비밀번호", example = "stirng")
+    @Schema(description = "비밀번호", example = "string")
     private String password;
+
+    @Schema(description = "비밀번호 확인", example = "string")
+    private String passwordConfirm;
 
     @Schema(description = "닉네임", example = "string")
     private String nickname;

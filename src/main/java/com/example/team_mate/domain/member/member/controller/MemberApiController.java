@@ -1,14 +1,13 @@
 package com.example.team_mate.domain.member.member.controller;
 
+import com.example.team_mate.domain.member.member.dto.LoginResponse;
 import com.example.team_mate.domain.member.member.dto.MemberLoginRequest;
 import com.example.team_mate.domain.member.member.dto.MemberSignUpRequest;
 import com.example.team_mate.domain.member.member.entity.Member;
 import com.example.team_mate.domain.member.member.service.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,7 +38,7 @@ public class MemberApiController {
                 request.getUsername(),
                 request.getNickname(),
                 request.getPassword(),
-                request.getPassword()
+                request.getPasswordConfirm()
         );
 
         return "회원가입 성공";
@@ -70,24 +69,5 @@ public class MemberApiController {
         );
 
         return ResponseEntity.ok(response);
-    }
-
-    @Getter
-    public static class LoginResponse {
-
-        @Schema(description = "회원 ID", example = "1")
-        private final Long id;
-
-        @Schema(description = "아이디", example = "likelion1111")
-        private final String username;
-
-        @Schema(description = "닉네임", example = "김멋사")
-        private final String nickname;
-
-        public LoginResponse(Long id, String username, String nickname) {
-            this.id = id;
-            this.username = username;
-            this.nickname = nickname;
-        }
     }
 }

@@ -1,16 +1,23 @@
 package com.example.team_mate.domain.roadmap.roadmap.controller;
 
+import com.example.team_mate.domain.member.member.entity.Member;
+import com.example.team_mate.domain.member.member.repository.MemberRepository;
 import com.example.team_mate.domain.project.project.entity.Project;
 import com.example.team_mate.domain.project.project.service.ProjectService;
 import com.example.team_mate.domain.roadmap.roadmap.entity.Roadmap;
 import com.example.team_mate.domain.roadmap.roadmap.service.RoadmapService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Controller
 @RequiredArgsConstructor
@@ -18,11 +25,17 @@ public class RoadmapController {
 
     private final RoadmapService roadmapService;
     private final ProjectService projectService;
+    private final MemberRepository memberRepository;
 
     /** 로드맵 조회 */
     @GetMapping("/project/{projectId}/roadmap")
-    public String showRoadmap(@PathVariable Long projectId, Model model) {
+    public String showRoadmap(@PathVariable Long projectId,
+                              @RequestParam(required = false) Long memberId,
+                              Authentication authentication,
+                              Model model) {
+
         Project project = projectService.findProjectById(projectId);
+        Long resolvedMemberId = resolveMemberId(memberId, authentication);
         List<Roadmap> roadmaps = roadmapService.getRoadmapsByProject(projectId);
         int totalProgress = roadmapService.getTotalProgress(projectId);
 
@@ -32,6 +45,7 @@ public class RoadmapController {
         long completedCount = roadmaps.stream().filter(r -> r.getProgress() == 100).count();
 
         model.addAttribute("project", project);
+        model.addAttribute("memberId", resolvedMemberId);
         model.addAttribute("roadmaps", roadmaps);
         model.addAttribute("totalProgress", totalProgress);
 
@@ -125,5 +139,19 @@ public class RoadmapController {
     public String deleteRoadmap(@PathVariable Long roadmapId, @RequestParam Long projectId) {
         roadmapService.deleteRoadmap(roadmapId);
         return "redirect:/project/" + projectId + "/roadmap";
+    }
+
+    private Long resolveMemberId(Long memberId, Authentication authentication) {
+        if (memberId != null) return memberId;
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return null; // 로그인 전 페이지면 null로 둠(필요하면 예외로 바꿔도 됨)
+        }
+
+        String username = authentication.getName();
+        Member me = memberRepository.findByUsername(username)
+                .orElseThrow(() -> new NoSuchElementException("Member not found: " + username));
+
+        return me.getId();
     }
 }

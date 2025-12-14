@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>대화방</title>
+</head>
+<body>
+
+<div>
+    <a th:href="@{/home/main}">&lt;</a>
+    <h3 th:text="${category}">카테고리</h3>
+    <h2 th:text="${projectName}">프로젝트이름</h2>
+</div>
+
+<hr/>
+
+<div th:if="${errorMessage}">
+    <p th:text="${errorMessage}"></p>
+</div>
+
+<hr/>
+
+<div>
+    <a th:href="@{/project/detail/{id}(id=${projectId})}">게시판</a> |
+    <a th:href="@{/project/{id}/roles(id=${projectId})}">역할</a> |
+    <a th:href="@{/project/{projectId}/events/calendar(projectId=${projectId})}">일정</a> |
+    <a th:href="@{/project/{id}/roadmap(id=${projectId})}">로드맵</a> |
+    <b>대화방</b>
+</div>
+
+<hr/>
+
+<div>
+    <input type="text" placeholder="검색어를 입력하세요." />
+    <a th:href="@{/project/{projectId}/chatrooms/new(projectId=${projectId}, memberId=${memberId})}">+</a>
+</div>
+
+<hr/>
+
+<div>
+    <div th:if="${#lists.isEmpty(chatRooms)}">
+        <p>대화방이 없습니다.</p>
+    </div>
+
+    <div th:each="room : ${chatRooms}">
+
+        <!-- 비밀번호 없는 방 -->
+        <div th:if="${!room.passwordEnabled}">
+            <a th:href="@{/project/chatrooms/{id}(id=${room.chatRoomId}, memberId=${memberId})}">
+                <span th:each="a, stat : ${room.avatars}"
+                      th:if="${stat.index < 4}"
+                      th:text="${a.initial}"
+                      th:style="'display:inline-flex;align-items:center;justify-content:center;'
+                              + 'width:22px;height:22px;border-radius:50%;'
+                              + 'margin-right:4px;font-size:12px;font-weight:700;color:#fff;'
+                              + 'background:' + ${a.avatarColor} + ';'">A</span>
+
+                <b th:text="${room.name}">대화방 이름</b>
+            </a>
+
+            <span th:text="| · ${room.memberCount}|"> · 0</span>
+
+            <span style="float:right;" th:text="${room.lastDisplayTime}">오전 0:00</span>
+            <div th:text="${room.lastMessage}">최근 메시지</div>
+        </div>
+
+        <!-- 비밀번호 있는 방 -->
+        <div th:if="${room.passwordEnabled}">
+            <a href="javascript:void(0)"
+               th:attr="onclick=|openPasswordModal(${room.chatRoomId}, '${room.name}')|">
+
+                <span th:each="a, stat : ${room.avatars}"
+                      th:if="${stat.index < 4}"
+                      th:text="${a.initial}"
+                      th:style="'display:inline-flex;align-items:center;justify-content:center;'
+                              + 'width:22px;height:22px;border-radius:50%;'
+                              + 'margin-right:4px;font-size:12px;font-weight:700;color:#fff;'
+                              + 'background:' + ${a.avatarColor} + ';'">A</span>
+
+                <b th:text="${room.name}">대화방 이름</b>
+            </a>
+
+            <span th:text="| · ${room.memberCount}|"> · 0</span>
+
+            <span style="float:right;" th:text="${room.lastDisplayTime}">오전 0:00</span>
+            <div th:text="${room.lastMessage}">최근 메시지</div>
+        </div>
+
+        <hr/>
+    </div>
+</div>
+
+<div id="passwordModal" style="display:none; border:1px solid #333; padding:10px; margin-top:20px;">
+    <h3>비밀번호 입력</h3>
+    <p>
+        대화방: <span id="modalRoomName">-</span>
+    </p>
+
+    <input type="password" id="roomPasswordInput" placeholder="4자리 숫자"
+           maxlength="4" inputmode="numeric" />
+    <br/><br/>
+
+    <button type="button" onclick="confirmPassword()">확인</button>
+    <button type="button" onclick="closePasswordModal()">취소</button>
+
+    <p id="passwordError" style="color:red;"></p>
+</div>
+
+<script th:inline="javascript">
+    let selectedRoomId = null;
+    const memberId = /*[[${memberId}]]*/ null;
+
+    function openPasswordModal(roomId, roomName){
+        selectedRoomId = roomId;
+        document.getElementById('modalRoomName').innerText = roomName;
+        document.getElementById('roomPasswordInput').value = "";
+        document.getElementById('passwordError').innerText = "";
+        document.getElementById('passwordModal').style.display = "block";
+    }
+
+    function closePasswordModal(){
+        selectedRoomId = null;
+        document.getElementById('passwordModal').style.display = "none";
+    }
+
+    function confirmPassword(){
+        const pw = document.getElementById('roomPasswordInput').value.trim();
+
+        if(memberId == null){
+            document.getElementById('passwordError').innerText =
+                "memberId가 없습니다. 다시 로그인/진입해주세요.";
+            return;
+        }
+
+        if(!/^\d{4}$/.test(pw)){
+            document.getElementById('passwordError').innerText =
+                "비밀번호는 4자리 숫자만 입력 가능";
+            return;
+        }
+
+        window.location.href =
+            `/project/chatrooms/${selectedRoomId}?memberId=${memberId}&roomPassword=${encodeURIComponent(pw)}`;
+    }
+</script>
+
+</body>
+</html>

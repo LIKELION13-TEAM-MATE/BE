@@ -13,7 +13,8 @@
     <a>게시판</a> |
     <a th:href="@{/project/{id}/roles(id=${project.id})}">역할</a> |
     <a th:href="@{/project/{projectId}/events/calendar(projectId=${project.id})}">일정</a> |
-    <a th:href="@{/project/{id}/roadmap(id=${project.id})}">로드맵</a>
+    <a th:href="@{/project/{id}/roadmap(id=${project.id})}">로드맵</a> |
+    <a th:href="@{/project/{id}/chatrooms(id=${project.id}, memberId=${memberId})}">대화방</a>
 
     <!--##############팀장 권한(수정,삭제,초대)##############-->
     <div th:if="${#authentication.name == project.member.username}">

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>대화방 생성</title>
+</head>
+<body>
+<h2>대화방 생성</h2>
+
+<!-- 화면에 안 보이게 hidden 처리 -->
+<input type="hidden" id="projectId" th:value="${projectId}">
+<input type="hidden" id="me" th:value="${memberId}">
+
+
+<button type="button" onclick="loadMembers()">프로젝트 참여자 불러오기</button>
+<div>
+    <div style="margin:8px 0; font-size:14px;">
+        대화상대 선택
+    </div>
+    <div id="selectedMembers" style="margin-bottom:10px;">
+        <!-- 여기서 "김멋사, 박멋사, 아기사자" 식으로 표시 -->
+    </div>
+</div>
+<div id="members"></div>
+
+대화방 이름: <input id="name" placeholder="대화방 이름을 입력하세요"><br>
+비밀번호(선택, 4자리): <input id="pw" placeholder="비밀번호를 입력하세요" maxlength="4"><br><br>
+
+<br>
+<button type="button" onclick="goList()">취소</button>
+<button type="button" onclick="createRoom()">생성</button>
+
+<hr>
+<pre id="result"></pre>
+
+<script>
+    let cachedMembers = [];
+    let meId = null;
+
+    async function loadMembers(){
+      const projectIdEl = document.getElementById('projectId');
+      const meEl = document.getElementById('me');
+
+      if (!projectIdEl || !meEl) {
+        document.getElementById('result').textContent =
+          "projectId/memberId가 없습니다. 컨트롤러에서 model(projectId, memberId) 넘기는지 확인!";
+        return;
+      }
+
+      const projectId = projectIdEl.value;
+      meId = Number(meEl.value);
+
+      const res = await fetch(`/api/v1/projects/${projectId}/chat-members?requesterMemberId=${meId}`);
+      if (!res.ok) {
+        document.getElementById('result').textContent = "참여자 불러오기 실패";
+        return;
+      }
+
+      cachedMembers = await res.json();
+
+      const wrap = document.getElementById('members');
+      wrap.innerHTML = "<h4>초대 멤버 선택</h4>";
+
+      cachedMembers.forEach(m => {
+        if (m.memberId === meId) return; // 나 자신 제외
+
+        const id = `m_${m.memberId}`;
+        wrap.innerHTML += `
+          <label>
+            <input type="checkbox" id="${id}" value="${m.memberId}" onchange="renderSelected()">
+            ${m.nickname}
+          </label><br>
+        `;
+      });
+
+      renderSelected(); // 처음엔 아무도 선택 안 된 상태로 표시
+    }
+
+    function renderSelected(){
+      const selected = cachedMembers
+        .filter(m => m.memberId !== meId)
+        .filter(m => {
+          const cb = document.getElementById(`m_${m.memberId}`);
+          return cb && cb.checked;
+        })
+        .map(m => m.nickname);
+
+      document.getElementById('selectedMembers').textContent =
+        selected.length ? selected.join(", ") : "";
+    }
+
+    async function createRoom(){
+      const projectId = document.getElementById('projectId').value;
+      const me = Number(document.getElementById('me').value);
+      const name = document.getElementById('name').value.trim();
+      const pwRaw = document.getElementById('pw').value.trim();
+      const pw = pwRaw === "" ? null : pwRaw;
+
+      if (!name) {
+        document.getElementById('result').textContent = "대화방 이름은 필수";
+        return;
+      }
+
+      if (pw !== null && !/^\d{4}$/.test(pw)) {
+        document.getElementById('result').textContent = "비밀번호는 4자리 숫자만 가능";
+        return;
+      }
+
+      const inviteMemberIds = cachedMembers
+        .map(m => m.memberId)
+        .filter(id => id !== me)
+        .filter(id => {
+          const cb = document.getElementById(`m_${id}`);
+          return cb && cb.checked;
+        });
+
+      const body = { name, inviteMemberIds, password: pw };
+
+      const res = await fetch(`/api/v1/projects/${projectId}/chatrooms?creatorMemberId=${me}`, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify(body)
+      });
+
+      const text = await res.text();
+      document.getElementById('result').textContent = text;
+
+      if (res.ok) {
+        window.location.href = `/project/${projectId}/chatrooms?memberId=${me}`;
+      }
+    }
+
+    function goList(){
+      const projectId = document.getElementById('projectId').value;
+      const me = document.getElementById('me').value;
+      window.location.href = `/project/${projectId}/chatrooms?memberId=${me}`;
+    }
+</script>
+</body>
+</html>

@@ -1,5 +1,7 @@
 package com.example.team_mate.domain.role.role.controller;
 
+import com.example.team_mate.domain.member.member.entity.Member;
+import com.example.team_mate.domain.member.member.repository.MemberRepository;
 import com.example.team_mate.domain.project.project.entity.Project;
 import com.example.team_mate.domain.project.project.service.ProjectService;
 import com.example.team_mate.domain.role.role.entity.ProjectRole;
@@ -9,6 +11,7 @@ import com.example.team_mate.domain.role.role.service.ProjectRoleService;
 import com.example.team_mate.domain.team.team.entity.TeamMembership;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @Controller
@@ -26,16 +30,29 @@ public class ProjectRoleController {
     private final ProjectRoleService projectRoleService;
     private final ProjectRoleAssignmentService assignmentService;
     private final ProjectService projectService;
+    private final MemberRepository memberRepository;
 
     /** 역할 관리 페이지 */
     @GetMapping
-    public String showRolePage(@PathVariable Long projectId, Model model) {
+    public String showRolePage(@PathVariable Long projectId,
+                               @RequestParam(required = false) Long memberId,
+                               Authentication authentication,
+                               Model model) {
 
         // 카테고리, 프로젝트 이름
         Project project = projectService.findProjectById(projectId);
         model.addAttribute("project", project);
         model.addAttribute("category", project.getCategory());
         model.addAttribute("projectName", project.getProjectName());
+        model.addAttribute("projectId", projectId);
+        Long resolvedMemberId = memberId;
+        if (resolvedMemberId == null && authentication != null && authentication.isAuthenticated()) {
+            String username = authentication.getName();
+            Member me = memberRepository.findByUsername(username)
+                    .orElseThrow(() -> new NoSuchElementException("Member not found: " + username));
+            resolvedMemberId = me.getId();
+        }
+        model.addAttribute("memberId", resolvedMemberId);
 
         // 팀원 목록 (TeamMembership 리스트)
         List<TeamMembership> teamMembers = projectRoleService.getTeamMembers(projectId);
@@ -66,9 +83,14 @@ public class ProjectRoleController {
     /** 역할 키워드 추가 (직접 추가하기 버튼) */
     @PostMapping("/add")
     public String addRole(@PathVariable Long projectId,
+                          @RequestParam(required = false) Long memberId,
                           @RequestParam String roleName) {
 
         projectRoleService.createRole(projectId, roleName);
+
+        if (memberId != null) {
+            return "redirect:/project/" + projectId + "/roles?memberId=" + memberId;
+        }
         return "redirect:/project/" + projectId + "/roles";
     }
 

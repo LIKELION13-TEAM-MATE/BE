@@ -1,0 +1,11 @@
+package com.example.team_mate.domain.chatroom.chatroom.repository;
+
+import com.example.team_mate.domain.chatroom.chatroom.entity.ChatRoom;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
+    List<ChatRoom> findByProjectIdOrderByIdDesc(Long projectId);
+    List<ChatRoom> findByProjectId(Long projectId);
+}

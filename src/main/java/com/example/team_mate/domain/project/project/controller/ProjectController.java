@@ -1,5 +1,7 @@
 package com.example.team_mate.domain.project.project.controller;
 
+import com.example.team_mate.domain.member.member.entity.Member;
+import com.example.team_mate.domain.member.member.repository.MemberRepository;
 import com.example.team_mate.domain.post.post.service.PostService;
 import com.example.team_mate.domain.project.project.dto.ProjectCreateRequest;
 import com.example.team_mate.domain.project.project.entity.Project;
@@ -13,6 +15,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+
+import java.util.NoSuchElementException;
+
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/project")
@@ -20,6 +25,7 @@ public class ProjectController {
 
     private final ProjectService projectService;
     private final PostService postService;
+    private final MemberRepository memberRepository;
 
     /** 새 프로젝트 생성 form */
     @GetMapping("/new")
@@ -41,7 +47,8 @@ public class ProjectController {
     @GetMapping("/detail/{projectId}")
     public String showProjectDetail(
             @PathVariable Long projectId,
-            Model model
+            Model model,
+            Authentication authentication
     ) {
         // 프로젝트 정보 가져오기
         Project project = projectService.findProjectById(projectId);
@@ -50,6 +57,12 @@ public class ProjectController {
         // 게시글 목록 가져오기
         java.util.List<com.example.team_mate.domain.post.post.entity.Post> posts = postService.getPostsByProject(projectId);
         model.addAttribute("posts", posts);
+
+        // 로그인 사용자 memberId
+        String username = authentication.getName();
+        Member me = memberRepository.findByUsername(username)
+                .orElseThrow(() -> new NoSuchElementException("Member not found: " + username));
+        model.addAttribute("memberId", me.getId());
 
         return "project/detail";
     }

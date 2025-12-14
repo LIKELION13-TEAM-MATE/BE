@@ -383,8 +383,8 @@
             <a th:href="@{/project/detail/{id}(id=${projectId})}">게시판</a>
             <a th:href="@{/project/{id}/roles(id=${projectId})}">역할</a>
             <a class="tab active">일정</a>
-            <a class="tab">로드맵</a>
-            <a class="tab">대화방</a>
+            <a th:href="@{/project/{id}/roadmap(id=${project.id})}">로드맵</a>
+            <a th:href="@{/project/{id}/chatrooms(id=${projectId}, memberId=${memberId})}">대화방</a>
         </div>
     </header>
 

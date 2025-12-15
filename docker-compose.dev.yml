@@ -1,7 +1,18 @@
 services:
-  projectname-mysql:     # 팀/프로젝트 이름을 접두사로 붙여 팀원이 여러 도커 띄워도 충돌이 안 나도록!
+  app:      # app 이하 코드를 도커 이미지 빌드 후 추가!
+    image: team-mate-app:local
+    container_name: team-mate-app-dev
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+    depends_on:
+      - team_mate-mysql
+    restart: unless-stopped
+
+  team_mate-mysql:
     image: mysql:8.0.43
-    container_name: team_mate-mysql-dev  # 프로젝트-서비스-환경 -> 협업 시 직관적임
+    container_name: team_mate-mysql-dev
     environment:
       MYSQL_ROOT_PASSWORD: team_mate_root
       MYSQL_DATABASE: team_mate_db

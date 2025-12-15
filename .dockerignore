@@ -1,0 +1,10 @@
+.gradle
+build
+.git
+.gitignore
+.DS_Store
+node_modules
+
+_vol
+_vol/
+**/*.sock

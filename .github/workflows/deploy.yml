@@ -35,10 +35,6 @@ jobs:
       - name: Set up QEMU (multi-arch emulation)
         uses: docker/setup-qemu-action@v3
 
-      # Docker Buildx 준비 (멀티아키 빌드)
-      - name: Set up QEMU (multi-arch emulation)
-        uses: docker/setup-qemu-action@v3
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 

@@ -18,6 +18,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 1. Java 17 세팅 (스프링부트 실행 환경)
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # 2. Gradle 빌드
+      - name: Build with Gradle
+        run: |
+          chmod +x gradlew
+          ./gradlew clean build -x test
+
+      # Docker Buildx 준비 (멀티아키 빌드)
+      - name: Set up QEMU (multi-arch emulation)
+        uses: docker/setup-qemu-action@v3
+
       # Docker Buildx 준비 (멀티아키 빌드)
       - name: Set up QEMU (multi-arch emulation)
         uses: docker/setup-qemu-action@v3

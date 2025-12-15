@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>역할 관리</title>
+</head>
+<body>
+<a th:href="@{/home/main}">&lt;</a>
+<h3 th:text="${category}">카테고리</h3>
+<h2 th:text="${projectName}">프로젝트이름</h2>
+
+<a th:href="@{/project/detail/{id}(id=${projectId})}">게시판</a> |
+<a>역할 | </a>
+<a th:href="@{/project/{projectId}/events/calendar(projectId=${projectId})}">일정</a> |
+<a th:href="@{/project/{id}/roadmap(id=${project.id})}">로드맵</a> |
+<a th:href="@{/project/{id}/chatrooms(id=${project.id}, memberId=${memberId})}">대화방</a>
+
+<!-- 역할 키워드 목록 -->
+<h3>역할 목록</h3>
+<ul>
+    <li th:each="role : ${roles}"
+        th:text="${role.name}">역할 이름</li>
+</ul>
+
+<!-- '직접 추가하기' 버튼 + 입력창 -->
+<form th:action="@{/project/{projectId}/roles/add(projectId=${projectId})}"
+      method="post">
+    <input type="text" name="roleName" placeholder="역할 이름 입력">
+    <button type="submit">직접 추가하기</button>
+</form>
+
+<hr/>
+
+<!-- 팀원 + 각 팀원에게 배정된 역할들 -->
+<h3>팀원</h3>
+<ul>
+    <li th:each="tm : ${teamMembers}">
+        <strong th:text="${tm.member.nickname}">닉네임</strong>
+
+        <!-- 이 팀원에게 배정된 역할 태그들 -->
+        <span th:each="role : ${memberRolesMap[tm.member.id]}"
+              th:text="${role.name}"
+              style="margin-left: 8px; padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px;">
+            역할
+        </span>
+    </li>
+</ul>
+
+<hr/>
+
+<!-- 역할 배정하기: 팀원 + 역할 선택 후 매칭 -->
+<h3>역할 배정하기</h3>
+<form th:action="@{/project/{projectId}/roles/assign(projectId=${projectId})}"
+      method="post">
+    <label>
+        팀원:
+        <select name="memberId">
+            <option th:each="tm : ${teamMembers}"
+                    th:value="${tm.member.id}"
+                    th:text="${tm.member.nickname}">
+            </option>
+        </select>
+    </label>
+
+    <label>
+        역할:
+        <select name="roleId">
+            <option th:each="role : ${roles}"
+                    th:value="${role.id}"
+                    th:text="${role.name}">
+            </option>
+        </select>
+    </label>
+
+    <button type="submit">배정</button>
+</form>
+<p>휴지통 드래그 기능은 데모 html만으로는 구현 불가능</p>
+</body>
+</html>

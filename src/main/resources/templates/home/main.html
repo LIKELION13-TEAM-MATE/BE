@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <p><a th:href="@{/}">홈</a></p>
+    <h1>메인화면</h1>
+
+    <!--새 프로젝트 만들기-->
+    <div>
+        <a th:href="@{/project/new}">프로젝트 생성</a>
+    </div>
+    <br/>
+
+    <!--진행 중인 프로젝트-->
+    <div>
+        <h3>진행 중인 프로젝트 <span th:text="${ongoingCount}">0</span>개</h3>
+
+        <div th:each="p : ${mainProjects}">
+            <span th:if="${p.important}">⭐</span>
+
+            <a th:href="@{/project/detail/{id}(id=${p.id})}">
+                <strong th:text="${p.projectName}">프로젝트명</strong>
+            </a>
+
+            <span th:text="'(' + ${p.dDay} + ')'">D-Day</span>
+        </div>
+
+        <!--완료된 프로젝트(보관함으로 이동)-->
+        <div>
+            <a th:href="@{/project/archive}">> 완료된 프로젝트</a>
+        </div>
+    </div>
+
+    <!--하단바-->
+    <br/>
+    <br/>
+    <hr/>
+    <a>메인화면</a> |
+    <a>캘린더</a> |
+    <a th:href="@{/project/new}">생성</a> |
+    <a th:href="@{/project/archive}">보관함</a> |
+    <a>마이페이지</a>
+
+</body>
+</html>

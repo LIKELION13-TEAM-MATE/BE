@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>환영합니다</title>
+</head>
+<body>
+<p><a th:href="@{/}">홈</a></p>
+<h1>환영합니다!</h1>
+
+<!-- 로그인 성공 시, username 변수를 출력 -->
+<div th:if="${#authentication.principal.member.nickname != null}"
+     th:with="member=${#authentication.principal.member}"
+     th:style="|background-color: ${member.avatarColor};
+                   width: 36px; height: 36px; border-radius: 50%;
+                   display: flex; align-items: center; justify-content: center;
+                   color: white; font-weight: bold; font-size: 1.2em; margin-right: 8px;|">
+    <span th:text="${member.initial}"></span>
+</div>
+<p th:text="'안녕하세요, ' + ${nickname} + ' 님!'"></p>
+
+<!-- 로그아웃 대신 다시 로그인 페이지로 이동 -->
+<p><a th:href="@{/member/login}">로그아웃</a></p>
+<p><a th:href="@{/home/main}">메인 화면</a></p>
+</body>
+</html>

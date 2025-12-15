@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>프로젝트 상세</title>
+</head>
+<body>
+<p><a th:href="@{/home/main}"><</a></p>
+<div th:object="${project}">
+    <h3 th:text="*{category}">카테고리</h3>
+    <h2 th:text="*{projectName}">프로젝트 이름</h2>
+
+    <a>게시판</a> |
+    <a th:href="@{/project/{id}/roles(id=${project.id})}">역할</a> |
+    <a th:href="@{/project/{projectId}/events/calendar(projectId=${project.id})}">일정</a> |
+    <a th:href="@{/project/{id}/roadmap(id=${project.id})}">로드맵</a> |
+    <a th:href="@{/project/{id}/chatrooms(id=${project.id}, memberId=${memberId})}">대화방</a>
+
+    <!--##############팀장 권한(수정,삭제,초대)##############-->
+    <div th:if="${#authentication.name == project.member.username}">
+
+        <!--수정 및 삭제-->
+        <p>
+            <a th:href="@{/project/edit/{id}(id=*{id})}">수정</a>
+        </p>
+
+        <form th:action="@{/project/delete/{id}(id=*{id})}" method="post" style="display:inline;">
+            <button type="submit" onclick="return confirm('정말로 이 프로젝트를 삭제하시겠습니까?');">
+                삭제
+            </button>
+        </form>
+        <hr/>
+
+        <!--초대-->
+        <form th:action="@{/project/detail/{id}/invite(id=${project.id})}" method="post">
+            <label for="username">초대할 팀원 ID:</label>
+            <input type="text" id="username" name="username" />
+            <button type="submit">초대</button>
+        </form>
+
+        <div th:if="${inviteErrorMessage}" style="color: red;">
+            <p th:text="${inviteErrorMessage}">오류 메시지</p>
+        </div>
+
+        <div th:if="${inviteSuccessMessage}" style="color: green;">
+            <p th:text="${inviteSuccessMessage}">성공 메시지</p>
+        </div>
+
+    </div> <hr/>
+
+    <!--##############멤버 목록##############-->
+    <ul>
+        <li th:each="membership : ${project.teamMemberships}">
+            <span th:text="${membership.member.username}">팀원 이름</span>
+            <strong th:if="${project.member.id == membership.member.id}"> 리더</strong>
+
+            <form th:if="${#authentication.name == project.member.username AND project.member.id != membership.member.id}"
+                  th:action="@{/project/{pid}/kick/{mid}(pid=*{id}, mid=${membership.id})}"
+                  method="post" style="display:inline; margin-left: 10px;">
+
+                <button type="submit" onclick="return confirm('이 팀원을 정말로 강퇴하시겠습니까?');" >
+                    강퇴
+                </button>
+            </form>
+        </li>
+    </ul>
+
+    <!--##############(D-n일)##############-->
+    <p>
+        <span th:text="'(' + *{dDay} + ')'">
+            (D-Day)
+        </span>
+    </p>
+
+    <!--##############게시글##############-->
+    <hr/>
+
+    <h3>게시판</h3>
+
+    <!-- 게시물 작성 -->
+    <div>
+        <a th:href="@{/project/{id}/post/create(id=${project.id})}">
+            게시물 작성
+        </a>
+        <br/>
+        <br/>
+    </div>
+
+    <div th:if="${#lists.isEmpty(posts)}">
+        <p>첫 게시물을 등록해보세요!</p>
+    </div>
+
+    <div th:unless="${#lists.isEmpty(posts)}">
+        <div th:each="post : ${posts}">
+
+            <!--작성자 정보, 작성일자-->
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <div th:if="${post.author.nickname != null}"
+                     th:style="|background-color: ${post.author.avatarColor};
+                   width: 32px; height: 32px; border-radius: 50%;
+                   display: flex; align-items: center; justify-content: center;
+                   color: white; font-weight: bold; font-size: 1.1em; margin-right: 8px;|">
+                    <span th:text="${post.author.initial}"></span>
+                </div>
+                <div>
+                    <span th:text="${post.author.nickname}" style="font-weight: bold; margin-right: 5px;">작성자명</span>
+                    <span th:text="${post.formattedDate}" style="font-size: 0.9em; color: gray;">2025-11-18 14:26</span>
+                </div>
+            </div>
+
+            <!-- 게시물 수정, 삭제, 고정 -->
+            <div style="display: flex; justify-content: space-between;">
+                <div style="position: relative;">
+                    <span th:if="${post.pinned}" style="color: red; margin-right: 5px;">
+                        📌고정됨
+                        <br/>
+                    </span>
+
+
+                    <div th:if="${#authentication.name == post.author.username}" style="display: inline-block;">
+
+                        <a th:href="@{/post/{id}/edit(id=${post.id})}" >수정</a>
+
+                        <form th:action="@{/post/{id}/delete(id=${post.id})}" method="post" style="display:inline;">
+                            <button type="submit" onclick="return confirm('삭제하시겠습니까?')">
+                                삭제
+                            </button>
+                        </form>
+
+                        <form th:action="@{/post/{id}/pin(id=${post.id})}" method="post" style="display:inline;">
+                            <button type="submit">
+                                <span th:text="${post.pinned} ? '고정취소' : '고정하기'"></span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <h4 th:text="${post.title}">게시글 제목</h4>
+
+            <div th:text="${post.content}">
+                본문 내용
+            </div>
+
+            <!--파일-->
+            <div th:if="${!post.attachedFiles.empty}" style="margin-bottom: 20px;">
+                <div th:each="file : ${post.attachedFiles}" style="margin-bottom: 10px;">
+
+                    <!--이미지일 시-->
+                    <div th:if="${file.isImage()}">
+                        <img th:src="|/uploads/posts/${post.id}/${file.storedFileName}|"
+                             style="max-width: 100%; max-height: 400px;">
+                    </div>
+
+                    <div th:unless="${file.isImage()}">
+                        <span>첨부파일: </span>
+                        <a th:href="|/uploads/posts/${post.id}/${file.storedFileName}|"
+                           th:text="${file.originalFileName}"
+                           download>
+                            파일이름.pdf
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+
+            <!--투표-->
+            <div th:if="${post.poll != null}">
+
+                <h4>투표:<span th:text="${post.poll.title}">투표 제목</span></h4>
+                <p>마감일: <span th:text="${post.poll.endDate}">2025-12-31</span></p>
+
+                <form th:action="@{/post/vote}" method="post">
+
+                    <input type="hidden" name="projectId" th:value="${project.id}" />
+                    <input type="hidden" name="postId" th:value="${post.id}" />
+
+                    <div th:each="option : ${post.poll.options}" style="margin-bottom: 8px;">
+                        <label style="cursor: pointer; display: flex; justify-content: space-between;">
+                            <div>
+                                <input th:type="${post.poll.allowMultiple} ? 'checkbox' : 'radio'"
+                                       name="pollOptionIds"
+                                       th:value="${option.id}" />
+
+                                <span th:text="${option.optionText}">보기 내용</span>
+                            </div>
+                            <span><span th:text="${option.votes}">0</span>표</span>
+                        </label>
+                    </div>
+
+                    <button type="submit">투표하기</button>
+                </form>
+
+                <div th:if="${pollErrorMessage != null && targetPostId == post.id}"
+                     style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+                    <span th:text="${pollErrorMessage}">오류 메시지</span>
+                </div>
+
+                <div th:if="${pollSuccessMessage != null && targetPostId == post.id}"
+                     style="background-color: #d4edda; color: #155724; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+                    <span th:text="${pollSuccessMessage}">성공 메시지</span>
+                </div>
+
+            </div>
+
+            <!--댓글-->
+            <div>
+                <p>댓글</p>
+
+                <div th:each="comment : ${post.comments}">
+                    <div style="display: flex; justify-content: space-between;">
+                        <div style="display: flex; align-items: center;">
+                            <div th:if="${comment.author.nickname != null}"
+                                 th:style="|background-color: ${comment.author.avatarColor};
+                                        width: 28px; height: 28px; border-radius: 50%;
+                                        display: flex; align-items: center; justify-content: center;
+                                        color: white; font-weight: bold; font-size: 1em; margin-right: 8px;|">
+                                <span th:text="${comment.author.initial}"></span>
+                            </div>
+                            <strong th:text="${comment.author.nickname}" style="margin-right: 10px;">작성자</strong><br/>
+                            <span th:text="${comment.content}" style="margin-right: 10px;">댓글 내용</span><br/>
+                            <span th:text="${comment.formattedDate}" style="font-size: 0.8em; color: gray;">날짜</span>
+                        </div>
+
+                        <div th:if="${#authentication.name == comment.author.username}">
+                            <form th:action="@{/comment/{cid}/delete(cid=${comment.id})}" method="post" style="display:inline;">
+                                <input type="hidden" name="projectId" th:value="${project.id}" />
+                                <button type="submit" onclick="return confirm('댓글을 삭제하시겠습니까?')">
+                                    삭제
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <form th:action="@{/post/{pid}/comment(pid=${post.id})}" method="post">
+                    <input type="hidden" name="projectId" th:value="${project.id}" />
+
+                    <input type="text" name="content" placeholder="댓글을 입력하세요." required/>
+
+                    <button type="submit">
+                        등록
+                    </button>
+                </form>
+            </div>
+
+            <hr/>
+            <br/>
+            <br/>
+
+    </div>
+
+    <!--##############프로젝트 정보##############-->
+    <p>
+        <strong>테마 색상:</strong> <span th:text="*{themeColor}">테마 색상</span>
+    </p>
+
+</div>
+
+
+<p><a th:href="@{/project/list}">프로젝트 목록</a></p>
+
+</body>
+</html>

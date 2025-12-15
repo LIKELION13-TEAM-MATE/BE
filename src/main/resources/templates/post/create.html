@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>게시글 작성</title>
+</head>
+<body>
+<a th:href="@{/project/detail/{id}(id=${projectId})}"><</a>
+<h2>게시글 작성</h2>
+
+<form th:action="@{/project/{id}/post/create(id=${projectId})}" method="post" enctype="multipart/form-data">
+    <!--게시글-->
+    <div>
+        <label>제목: </label>
+        <input type="text" name="title" placeholder="제목을 입력하세요" required/>
+    </div>
+    <br/>
+
+    <div>
+        <label>내용: </label>
+        <textarea name="content" rows="10" cols="50" placeholder="내용을 입력하세요" required></textarea>
+    </div>
+    <br/>
+
+    <!-- 파일첨부 -->
+    <div>
+        <label>파일 첨부(Ctrl 누르며 여러 개의 파일 올릴 수 있음): </label>
+        <input type="file" name="files" multiple/>
+    </div>
+    <br/>
+
+    <!-- 투표 -->
+    <div>
+        <label>투표 추가:</label>
+        <input type="checkbox" id="addPollCheckbox" onchange="togglePollForm()"/>
+    </div>
+    <div id="pollForm" style="display: none; border: 1px solid #ddd; padding: 15px; margin-top: 10px; border-radius: 5px;">
+        <h4>투표 생성</h4>
+        <div>
+            <label>투표 제목: </label>
+            <input type="text" name="pollTitle" placeholder="투표 제목" required/>
+        </div>
+        <br/>
+        <div>
+            <label>마감일: </label>
+            <input type="date" name="pollEndDate" />
+        </div>
+        <br/>
+        <div id="pollOptionsContainer">
+            <label>보기: </label>
+            <input type="text" name="pollOptions" placeholder="보기 1" required/><br/>
+            <input type="text" name="pollOptions" placeholder="보기 2" required/><br/>
+        </div>
+        <button type="button" onclick="addPollOption()">보기 추가</button>
+
+        <div>
+            <label>
+                <input type="checkbox" name="pollAllowMultiple" />
+                복수 선택 허용
+            </label>
+        </div>
+    </div>
+    <br/>
+
+    <button type="submit">등록하기</button>
+</form>
+
+<hr/>
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function() {
+        togglePollForm();
+    });
+
+    function togglePollForm() {
+        var checkbox = document.getElementById('addPollCheckbox');
+        var pollForm = document.getElementById('pollForm');
+
+        var pollInputs = pollForm.getElementsByTagName('input');
+
+        if (checkbox.checked) {
+            pollForm.style.display = 'block';
+
+            for (var i = 0; i < pollInputs.length; i++) {
+                pollInputs[i].disabled = false;
+            }
+        } else {
+            pollForm.style.display = 'none';
+
+            for (var i = 0; i < pollInputs.length; i++) {
+                pollInputs[i].disabled = true;
+            }
+        }
+    }
+
+    function addPollOption() {
+        var container = document.getElementById('pollOptionsContainer');
+        var inputCount = container.getElementsByTagName('input').length;
+
+        var newInput = document.createElement('input');
+        newInput.type = 'text';
+        newInput.name = 'pollOptions';
+        newInput.placeholder = '보기 ' + (inputCount + 1);
+        newInput.style.width = '200px';
+        newInput.style.marginBottom = '5px';
+        newInput.required = true;
+
+        container.appendChild(document.createElement('br'));
+        container.appendChild(newInput);
+    }
+</script>
+
+</body>
+</html>

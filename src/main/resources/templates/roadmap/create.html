@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>단계 추가</title>
+</head>
+<body>
+<h2>단계 생성</h2>
+
+<form th:action="@{/project/{id}/roadmap/create(id=${project.id})}" method="post">
+
+    <div>
+        <label>단계 설정:</label>
+        <select name="role" required>
+            <option value="">N단계</option>
+            <option th:each="i : ${#numbers.sequence(1, 20)}"
+                    th:value="${i + '단계'}"
+                    th:text="${i + '단계'}">
+            </option>
+        </select>
+    </div>
+    <br/>
+
+    <div>
+        <label>제목:</label>
+        <input type="text" name="title" placeholder="기획, 개발, 디자인..." required>
+    </div>
+    <br/>
+
+    <div>
+        <label>마감일:</label>
+        <input type="date" name="deadline" required>
+    </div>
+    <br/>
+
+    <div>
+        <label>동업자 (다중 선택 -> ctrl 키 누른 상태로 클릭):</label><br/>
+        <select name="memberIds" multiple="multiple">
+            <option th:each="membership : ${project.teamMemberships}"
+                    th:value="${membership.member.id}"
+                    th:text="${membership.member.username}">
+                멤버이름
+            </option>
+        </select>
+    </div>
+    <br/>
+
+    <button type="submit">완료</button>
+    <a th:href="@{/project/{id}/roadmap(id=${project.id})}">취소</a>
+</form>
+</body>
+</html>

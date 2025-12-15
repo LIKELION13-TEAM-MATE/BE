@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>프로젝트 보관함</title></head>
+<body>
+    <a th:href="@{/home/main}"><</a>
+    <h2>프로젝트 보관함</h2>
+
+    <h3>진행 중인 프로젝트 <span th:text="${ongoingProjects.size()}">0</span>개</h3>
+    <ul style="list-style: none;">
+        <li th:each="p : ${ongoingProjects}">
+            <div>
+            <form th:action="@{/project/{id}/important(id=${p.id})}" method="post" style="display:inline;">
+                <button type="submit">
+                    <span th:if="${p.important}">⭐</span>
+                    <span th:unless="${p.important}">☆</span> </button>
+            </form>
+
+            <a th:href="@{/project/detail/{id}(id=${p.id})}">
+                <span th:text="${p.projectName}">프로젝트명</span>
+            </a>
+            <span th:text="${p.dDay}">D-Day</span>
+            <span>색상</span>
+
+            <!--수정&삭제-->
+            <span th:if="${#authentication.name == p.member.username}">
+                <a th:href="@{/project/edit/{id}(id=${p.id})}">수정</a>
+
+                <form th:action="@{/project/delete/{id}(id=${p.id})}" method="post" style="display:inline;">
+                    <button type="submit" onclick="return confirm('정말로 삭제하시겠습니까?')">
+                        [삭제]
+                    </button>
+                </form>
+            </span>
+                <br/>
+                <br/>
+            </div>
+        </li>
+    </ul>
+
+    <hr/>
+
+    <h3>완료된 프로젝트</h3>
+    <ul style="list-style: none;">
+        <li th:each="p : ${completedProjects}">
+            <a th:href="@{/project/detail/{id}(id=${p.id})}">
+                <span th:text="${p.projectName}">완료된 프로젝트명</span>
+            </a>
+            <span th:text="${p.deadline}">2025.09.18</span>
+            <span>색상</span>
+
+            <!--수정&삭제-->
+            <span th:if="${#authentication.name == p.member.username}">
+                <a th:href="@{/project/edit/{id}(id=${p.id})}">수정</a>
+
+                <form th:action="@{/project/delete/{id}(id=${p.id})}" method="post" style="display:inline;">
+                    <button type="submit" onclick="return confirm('정말로 삭제하시겠습니까?')">
+                        [삭제]
+                    </button>
+                </form>
+            </span>
+            <br/>
+        </li>
+    </ul>
+
+    <!--하단바-->
+    <br/>
+    <br/>
+    <hr/>
+    <a th:href="@{/home/main}">메인화면</a> |
+    <a>캘린더</a> |
+    <a th:href="@{/project/new}">생성</a> |
+    <a>보관함</a> |
+    <a>마이페이지</a>
+
+</body>
+</html>

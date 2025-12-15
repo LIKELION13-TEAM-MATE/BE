@@ -1,5 +1,5 @@
 # ===== 1) BUILD STAGE =====
-FROM eclipse-temurin:17-jdk AS build
+FROM eclipse-temurin:21-jdk AS build
 WORKDIR /app
 
 # Gradle 캐시 최적화: 래퍼/설정 먼저 복사 → 의존성 캐시
@@ -14,7 +14,7 @@ COPY . .
 RUN ./gradlew clean bootJar --no-daemon
 
 # ===== 2) RUNTIME STAGE =====
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:21-jre
 ENV TZ=Asia/Seoul \
     JAVA_OPTS="-XX:+UseG1GC -XX:MaxRAMPercentage=75 -Duser.timezone=Asia/Seoul"
 WORKDIR /opt/app

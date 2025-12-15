@@ -1,6 +1,7 @@
 package com.example.team_mate.config;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -8,10 +9,21 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
 
     @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins(
+                        "http://localhost:3000",   // 프론트엔드 로컬 개발 환경
+                        "https://team-mate.shop"   // 백엔드 도메인
+                        // "https://프론트엔드배포주소.com" // 나중에 프론트엔드 팀원이 배포하면 그 주소 꼭 추가!
+                )
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowCredentials(true)
+                .maxAge(3600);
+    }
+
+    @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // "/uploads/**" 로 시작하는 주소를 요청
         registry.addResourceHandler("/uploads/**")
-                // 내 컴퓨터의 실제 "uploads/" 폴더에서 파일을 찾아서 보여줌
-                .addResourceLocations("file:uploads/");
+                .addResourceLocations("file:./uploads/");
     }
 }

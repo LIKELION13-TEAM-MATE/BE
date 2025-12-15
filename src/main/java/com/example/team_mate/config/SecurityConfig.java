@@ -2,6 +2,7 @@ package com.example.team_mate.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -23,9 +24,19 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .cors(Customizer.withDefaults()) // WebConfig의 CORS 설정을 적용
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/member/signup", "/member/login", "/css/**", "/js/**").permitAll()
+                        .requestMatchers(
+                                "/",
+                                "/member/signup",
+                                "/member/login",
+                                "/css/**",
+                                "/js/**",
+                                "/uploads/**",        // 업로드된 파일 접근 허용
+                                "/swagger-ui/**",     // Swagger UI 접근 허용
+                                "/v3/api-docs/**"     // Swagger API 문서 접근 허용
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

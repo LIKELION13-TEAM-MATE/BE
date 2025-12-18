@@ -23,7 +23,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -112,15 +114,17 @@ public class EventApiController {
                     content = @Content(schema = @Schema(implementation = Long.class))
             )
     })
-    public ResponseEntity<Long> createEvent(
-            @Parameter(description = "프로젝트 ID", example = "1")
-            @PathVariable Long projectId,
-            @RequestBody EventCreateRequest request,
-            Authentication authentication
+    public ResponseEntity<Map<String, Long>> createEvent( // Long -> Map 변경
+                                                          @Parameter(description = "프로젝트 ID", example = "1")
+                                                          @PathVariable Long projectId,
+                                                          @RequestBody EventCreateRequest request,
+                                                          Authentication authentication
     ) {
         String username = authentication.getName();
         Long eventId = eventService.createEvent(projectId, username, request);
-        return ResponseEntity.ok(eventId);
+
+        // 단순 숫자 대신 JSON 객체 반환: { "eventId": 123 }
+        return ResponseEntity.ok(Collections.singletonMap("eventId", eventId));
     }
 
     // 일정 상세 조회
@@ -184,17 +188,19 @@ public class EventApiController {
             @ApiResponse(responseCode = "200", description = "수정 성공"),
             @ApiResponse(responseCode = "404", description = "일정을 찾을 수 없습니다.")
     })
-    public ResponseEntity<Void> updateEvent(
-            @Parameter(description = "프로젝트 ID", example = "1")
-            @PathVariable Long projectId,
-            @Parameter(description = "일정 ID", example = "10")
-            @PathVariable Long eventId,
-            @RequestBody EventUpdateRequest request,
-            Authentication authentication
+    public ResponseEntity<String> updateEvent( // Void -> String 변경
+                                               @Parameter(description = "프로젝트 ID", example = "1")
+                                               @PathVariable Long projectId,
+                                               @Parameter(description = "일정 ID", example = "10")
+                                               @PathVariable Long eventId,
+                                               @RequestBody EventUpdateRequest request,
+                                               Authentication authentication
     ) {
         String username = authentication.getName();
         eventService.updateEvent(projectId, eventId, username, request);
-        return ResponseEntity.ok().build();
+
+        // 프론트엔드 JSON 파싱 에러 방지를 위해 메시지 반환
+        return ResponseEntity.ok("{\"message\": \"Event Updated\"}");
     }
 
     // 일정 삭제
@@ -204,18 +210,20 @@ public class EventApiController {
             description = "특정 일정을 삭제합니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "삭제 성공"),
+            @ApiResponse(responseCode = "200", description = "삭제 성공"), // 204 -> 200 변경
             @ApiResponse(responseCode = "404", description = "일정을 찾을 수 없습니다.")
     })
-    public ResponseEntity<Void> deleteEvent(
-            @Parameter(description = "프로젝트 ID", example = "1")
-            @PathVariable Long projectId,
-            @Parameter(description = "일정 ID", example = "10")
-            @PathVariable Long eventId,
-            Authentication authentication
+    public ResponseEntity<String> deleteEvent( // Void -> String 변경
+                                               @Parameter(description = "프로젝트 ID", example = "1")
+                                               @PathVariable Long projectId,
+                                               @Parameter(description = "일정 ID", example = "10")
+                                               @PathVariable Long eventId,
+                                               Authentication authentication
     ) {
         String username = authentication.getName();
         eventService.deleteEvent(projectId, eventId, username);
-        return ResponseEntity.noContent().build();
+
+        // 프론트엔드 JSON 파싱 에러 방지를 위해 메시지 반환
+        return ResponseEntity.ok("{\"message\": \"Event Deleted\"}");
     }
 }

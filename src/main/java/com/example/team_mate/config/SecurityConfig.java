@@ -3,6 +3,8 @@ package com.example.team_mate.config;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -28,6 +30,11 @@ public class SecurityConfig {
     }
 
     @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+        return configuration.getAuthenticationManager();
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -40,6 +47,8 @@ public class SecurityConfig {
                                 "/",
                                 "/member/signup",
                                 "/member/login",
+                                "/api/v1/members/signup",
+                                "/api/v1/members/login",
                                 "/css/**",
                                 "/js/**",
                                 "/uploads/**",        // 업로드된 파일 접근 허용
@@ -47,26 +56,6 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"     // Swagger API 문서 접근 허용
                         ).permitAll()
                         .anyRequest().authenticated()
-                )
-
-                // 로그인 설정
-                .formLogin(login -> login
-                        .loginProcessingUrl("/member/login")
-
-                        // 성공 핸들러
-                        .successHandler((request, response, authentication) -> {
-                            response.setStatus(HttpServletResponse.SC_OK);
-                            response.setContentType("application/json;charset=UTF-8");
-                            response.getWriter().write("{\"message\": \"Login Success\"}");
-                        })
-
-                        // 실패 핸들러
-                        .failureHandler((request, response, exception) -> {
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                            response.setContentType("application/json;charset=UTF-8");
-                            response.getWriter().write("{\"error\": \"Login Failed\", \"message\": \"" + exception.getMessage() + "\"}");
-                        })
-                        .permitAll()
                 )
 
                 // 로그아웃 설정

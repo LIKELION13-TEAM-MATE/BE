@@ -109,14 +109,16 @@ public class ProjectApiController {
 
     @Operation(summary = "프로젝트 삭제", description = "프로젝트를 삭제합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "삭제 성공"),
+            @ApiResponse(responseCode = "200", description = "삭제 성공"), // 204 -> 200으로 변경
             @ApiResponse(responseCode = "404", description = "프로젝트 없음")
     })
     @DeleteMapping(
             value = "/{projectId}"
     )
-    public ResponseEntity<Void> deleteProject(@PathVariable Long projectId) {
+    public ResponseEntity<String> deleteProject(@PathVariable Long projectId) { // Void -> String으로 변경
         projectService.deleteProject(projectId);
-        return ResponseEntity.noContent().build();
+
+        // 프론트엔드 JSON 파싱 에러 방지를 위해 메시지 반환
+        return ResponseEntity.ok("{\"message\": \"Project Deleted\"}");
     }
 }

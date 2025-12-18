@@ -79,6 +79,7 @@ public class PostApiController {
 
         String username = authentication.getName();
 
+        // (참고: 파일/투표 기능은 null로 처리되어 있습니다. 추후 기능 추가 시 수정 필요)
         postService.createPost(
                 projectId,
                 username,
@@ -91,7 +92,7 @@ public class PostApiController {
                 false    // pollAllowMultiple
         );
 
-        // 생성된 Post ID를 알기 위해, 최신 글 1개 다시 조회
+        // 생성된 Post ID를 알기 위해, 최신 글 1개 다시 조회 (서비스가 void 반환이라 불가피한 로직)
         List<Post> latest = postService.getPostsByProject(projectId);
         Post created = latest.get(0);
 
@@ -156,18 +157,20 @@ public class PostApiController {
     // ===================== 삭제 ===================== //
     @Operation(summary = "게시글 삭제", description = "게시글을 삭제합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "삭제 성공"),
+            @ApiResponse(responseCode = "200", description = "삭제 성공"), // 204 -> 200으로 변경
             @ApiResponse(responseCode = "403", description = "삭제 권한 없음"),
             @ApiResponse(responseCode = "404", description = "게시글 없음")
     })
     @DeleteMapping("/posts/{postId}")
-    public ResponseEntity<Void> deletePost(
-            @PathVariable Long postId,
-            Authentication authentication
+    public ResponseEntity<String> deletePost( // Void -> String으로 변경
+                                              @PathVariable Long postId,
+                                              Authentication authentication
     ) {
         String username = authentication.getName();
         postService.deletePost(postId, username);
-        return ResponseEntity.noContent().build();
+
+        // 프론트엔드 JSON 파싱 에러 방지를 위해 메시지 반환
+        return ResponseEntity.ok("{\"message\": \"Post Deleted\"}");
     }
 
     // ===================== 고정 토글 ===================== //
@@ -198,13 +201,15 @@ public class PostApiController {
             value = "/posts/{postId}/vote",
             consumes = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<Void> vote(
-            @PathVariable Long postId,
-            @RequestBody List<Long> pollOptionIds,
-            Authentication authentication
+    public ResponseEntity<String> vote( // Void -> String으로 변경
+                                        @PathVariable Long postId,
+                                        @RequestBody List<Long> pollOptionIds,
+                                        Authentication authentication
     ) {
         String username = authentication.getName();
         postService.vote(pollOptionIds, username);
-        return ResponseEntity.ok().build();
+
+        // 프론트엔드 JSON 파싱 에러 방지를 위해 메시지 반환
+        return ResponseEntity.ok("{\"message\": \"Vote Success\"}");
     }
 }

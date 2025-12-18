@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity; // 추가
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,16 +40,16 @@ public class CommentApiController {
                     @ApiResponse(responseCode = "404", description = "게시글 없음")
             }
     )
-    public CommentCreateResponse writeComment(
-            @Parameter(description = "댓글을 작성할 게시글 ID")
-            @PathVariable Long postId,
+    public ResponseEntity<CommentCreateResponse> writeComment( // ResponseEntity로 변경
+                                                               @Parameter(description = "댓글을 작성할 게시글 ID")
+                                                               @PathVariable Long postId,
 
-            @RequestBody CommentCreateRequest request,
+                                                               @RequestBody CommentCreateRequest request,
 
-            Authentication authentication
+                                                               Authentication authentication
     ) {
         Comment comment = commentService.writeComment(postId, authentication.getName(), request.getContent());
-        return new CommentCreateResponse(comment);
+        return ResponseEntity.ok(new CommentCreateResponse(comment));
     }
 
 
@@ -63,12 +64,15 @@ public class CommentApiController {
                     @ApiResponse(responseCode = "404", description = "댓글 없음")
             }
     )
-    public void deleteComment(
-            @Parameter(description = "삭제할 댓글 ID")
-            @PathVariable Long commentId,
+    public ResponseEntity<String> deleteComment( // Void -> String 변경 (JSON 반환)
+                                                 @Parameter(description = "삭제할 댓글 ID")
+                                                 @PathVariable Long commentId,
 
-            Authentication authentication
+                                                 Authentication authentication
     ) {
         commentService.deleteComment(commentId, authentication.getName());
+
+        // 프론트엔드 JSON 파싱 에러 방지를 위해 명확한 JSON 메시지 반환
+        return ResponseEntity.ok("{\"message\": \"Comment Deleted\"}");
     }
 }

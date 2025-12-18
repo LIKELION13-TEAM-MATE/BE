@@ -2,12 +2,14 @@ package com.example.team_mate.domain.project.project.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
 
 @Getter
 @Setter
+@NoArgsConstructor
 @Schema(description = "프로젝트 생성 요청")
 public class ProjectCreateRequest {
 

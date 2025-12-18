@@ -2,10 +2,12 @@ package com.example.team_mate.domain.member.member.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
+@NoArgsConstructor
 @Schema(description = "회원가입 요청 DTO")
 public class MemberSignUpRequest {
 

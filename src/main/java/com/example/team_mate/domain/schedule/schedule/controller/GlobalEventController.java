@@ -11,7 +11,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -22,8 +24,10 @@ public class GlobalEventController {
 
     /** 일정 탭 메인 – 달력 화면 */
     @GetMapping("/my-calendar")
-    public String showGlobalCalendarPage() {
-        return "member/my-calendar";
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> showGlobalCalendarPage() {
+        // HTML 뷰 대신 간단한 JSON 응답 반환
+        return ResponseEntity.ok(Collections.singletonMap("message", "Global Calendar Page"));
     }
 
     /** 월별 이벤트 점 정보 (Ajax) */

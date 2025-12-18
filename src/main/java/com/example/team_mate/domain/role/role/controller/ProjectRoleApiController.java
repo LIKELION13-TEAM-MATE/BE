@@ -138,14 +138,16 @@ public class ProjectRoleApiController {
             @ApiResponse(responseCode = "200", description = "해제 성공"),
             @ApiResponse(responseCode = "404", description = "역할 / 멤버를 찾을 수 없습니다.")
     })
-    public ResponseEntity<Void> unassignRole(
-            @Parameter(description = "프로젝트 ID", example = "1")
-            @PathVariable Long projectId,
-            @Parameter(description = "역할 ID", example = "3")
-            @PathVariable Long roleId,
-            @RequestBody ProjectRoleAssignmentRequest request
+    public ResponseEntity<String> unassignRole( // Void -> String 변경
+                                                @Parameter(description = "프로젝트 ID", example = "1")
+                                                @PathVariable Long projectId,
+                                                @Parameter(description = "역할 ID", example = "3")
+                                                @PathVariable Long roleId,
+                                                @RequestBody ProjectRoleAssignmentRequest request
     ) {
         assignmentService.unassignRole(roleId, request.getMemberId());
-        return ResponseEntity.ok().build();
+
+        // 프론트엔드 JSON 파싱 에러 방지를 위해 메시지 반환
+        return ResponseEntity.ok("{\"message\": \"Role Unassigned\"}");
     }
 }

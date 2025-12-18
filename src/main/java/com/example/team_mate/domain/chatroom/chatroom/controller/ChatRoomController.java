@@ -7,11 +7,14 @@ import com.example.team_mate.domain.chatroom.chatroom.service.ChatRoomService;
 import com.example.team_mate.domain.project.project.entity.Project;
 import com.example.team_mate.domain.project.project.repository.ProjectRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -20,102 +23,94 @@ public class ChatRoomController {
 
     private final ProjectRepository projectRepository;
     private final ChatRoomService chatRoomService;
-
-    // 추가: 입장 차단/비번검증을 위해 필요
     private final ChatRoomRepository chatRoomRepository;
     private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final PasswordEncoder passwordEncoder;
 
+    /** 채팅방 목록 조회 */
     @GetMapping("/{id}/chatrooms")
-    public String chatrooms(@PathVariable Long id,
-                            @RequestParam Long memberId,
-                            Model model) {
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> chatrooms(@PathVariable Long id,
+                                                         @RequestParam Long memberId) {
 
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Project not found"));
 
-        model.addAttribute("project", project);
-        model.addAttribute("projectId", project.getId());
-        model.addAttribute("projectName", project.getProjectName());
-        model.addAttribute("category", project.getCategory());
-        model.addAttribute("memberId", memberId);
+        // 프론트엔드에 필요한 데이터 조립
+        Map<String, Object> response = new HashMap<>();
+        response.put("projectId", project.getId());
+        response.put("projectName", project.getProjectName());
+        response.put("category", project.getCategory());
 
-        model.addAttribute("chatRooms", chatRoomService.getChatRooms(id, memberId));
+        // 채팅방 리스트 가져오기
+        // (참고: ChatRoomService.getChatRooms가 DTO를 반환하는지 Entity를 반환하는지에 따라
+        //  JSON 직렬화 문제가 생길 수도 있습니다. 만약 무한 참조 에러가 나면 DTO로 변환이 필요합니다.)
+        response.put("chatRooms", chatRoomService.getChatRooms(id, memberId));
 
-        return "chatroom/chatrooms";
+        return ResponseEntity.ok(response);
     }
 
+    /** 채팅방 생성 폼 정보 조회 */
     @GetMapping("/{projectId}/chatrooms/new")
-    public String createForm(@PathVariable Long projectId,
-                             @RequestParam Long memberId, //  create 화면에서도 memberId 유지(필요하면 사용)
-                             Model model) {
-
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> createForm(@PathVariable Long projectId,
+                                                          @RequestParam Long memberId) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("Project not found"));
 
-        model.addAttribute("project", project);
-        model.addAttribute("projectId", project.getId());
-        model.addAttribute("projectName", project.getProjectName());
-        model.addAttribute("category", project.getCategory());
-        model.addAttribute("memberId", memberId);
+        Map<String, Object> response = new HashMap<>();
+        response.put("projectId", project.getId());
+        response.put("projectName", project.getProjectName());
 
-        return "chatroom/chatroom-create";
+        return ResponseEntity.ok(response);
     }
 
     /**
-     * 채팅방 입장 페이지
-     * - 초대되지 않은 사람: "초대되지 않은 채팅방입니다." 띄우고 목록으로 리다이렉트
-     * - 비밀번호 방: roomPassword 없거나 틀리면 메시지 띄우고 목록으로 리다이렉트
+     * 채팅방 입장 (유효성 검증)
+     * 성공 시 JSON, 실패 시 에러 코드(400/403) 반환
      */
     @GetMapping("/chatrooms/{chatRoomId}")
-    public String chatRoom(@PathVariable Long chatRoomId,
-                           @RequestParam Long memberId,
-                           @RequestParam(required = false) String roomPassword,
-                           RedirectAttributes ra,
-                           Model model) {
+    @ResponseBody
+    public ResponseEntity<?> chatRoom(@PathVariable Long chatRoomId,
+                                      @RequestParam Long memberId,
+                                      @RequestParam(required = false) String roomPassword) {
 
         ChatRoom room = chatRoomRepository.findById(chatRoomId)
                 .orElseThrow(() -> new IllegalArgumentException("ChatRoom not found"));
 
-        Project project = room.getProject();
-
         // 1) 초대 여부 체크
         if (!chatRoomMemberRepository.existsByChatRoom_IdAndMember_Id(chatRoomId, memberId)) {
-            ra.addFlashAttribute("errorMessage", "초대되지 않은 채팅방입니다.");
-            return "redirect:/project/" + project.getId() + "/chatrooms?memberId=" + memberId;
+            // [실패] 403 Forbidden: 초대받지 않음 -> 프론트에서 "입장 불가" 알림
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("{\"error\": \"Forbidden\", \"message\": \"초대되지 않은 채팅방입니다.\"}");
         }
 
-        // 2) 비밀번호 방이면 입장 시점에서 비번 검증
+        // 비밀번호 방이면 입장 시점에서 비번 검증
         if (room.isPasswordEnabled()) {
             String input = (roomPassword == null) ? null : roomPassword.trim();
 
             if (input == null || input.isEmpty()) {
-                ra.addFlashAttribute("errorMessage", "비밀번호가 필요한 채팅방입니다.");
-                return "redirect:/project/" + project.getId() + "/chatrooms?memberId=" + memberId;
+
+                return ResponseEntity.badRequest()
+                        .body("{\"error\": \"Password Required\", \"message\": \"비밀번호가 필요한 채팅방입니다.\"}");
             }
 
             if (!passwordEncoder.matches(input, room.getPasswordHash())) {
-                ra.addFlashAttribute("errorMessage", "비밀번호가 일치하지 않습니다.");
-                return "redirect:/project/" + project.getId() + "/chatrooms?memberId=" + memberId;
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("{\"error\": \"Invalid Password\", \"message\": \"비밀번호가 일치하지 않습니다.\"}");
             }
         }
 
-        // 채팅방 이름 + 인원수
+        // 모든 검증 통과 -> 입장 정보 반환
         long memberCount = chatRoomMemberRepository.countByChatRoom_Id(chatRoomId);
 
-        // 정상 입장: chatroom.html에 필요한 값 세팅
-        model.addAttribute("project", project);
-        model.addAttribute("projectId", project.getId());
-        model.addAttribute("projectName", project.getProjectName());
-        model.addAttribute("category", project.getCategory());
+        Map<String, Object> response = new HashMap<>();
+        response.put("chatRoomId", chatRoomId);
+        response.put("chatRoomName", room.getName());
+        response.put("memberCount", memberCount);
+        response.put("projectId", room.getProject().getId());
+        response.put("message", "Enter Success"); // 입장 허용 메시지
 
-        model.addAttribute("chatRoomId", chatRoomId);
-        model.addAttribute("memberId", memberId);
-        model.addAttribute("roomPassword", roomPassword);
-
-        model.addAttribute("chatRoomName", room.getName());
-        model.addAttribute("chatRoomMemberCount", memberCount);
-
-        return "chatroom/chatroom";
+        return ResponseEntity.ok(response);
     }
 }

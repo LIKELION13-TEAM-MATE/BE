@@ -3,19 +3,17 @@ package com.example.team_mate.domain.post.post.controller;
 import com.example.team_mate.domain.post.post.entity.Post;
 import com.example.team_mate.domain.post.post.service.PostService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -25,14 +23,18 @@ public class PostController {
 
     /** 게시물 작성 form */
     @GetMapping("/project/{projectId}/post/create")
-    public String showWriteForm(@PathVariable Long projectId, Model model) {
-        model.addAttribute("projectId", projectId);
-        return "post/create";
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> showWriteForm(@PathVariable Long projectId) {
+        // 프론트엔드에 프로젝트 ID 전달
+        Map<String, Object> response = new HashMap<>();
+        response.put("projectId", projectId);
+        return ResponseEntity.ok(response);
     }
 
     /** 게시글 작성 처리 */
     @PostMapping("/project/{projectId}/post/create")
-    public String createPost(
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> createPost(
             @PathVariable Long projectId,
             @RequestParam String title,
             @RequestParam String content,
@@ -41,57 +43,72 @@ public class PostController {
             @RequestParam(required = false) List<String> pollOptions,
             @RequestParam(required = false) LocalDate pollEndDate,
             @RequestParam(required = false, defaultValue = "false") boolean pollAllowMultiple,
-            Authentication authentication,
-            RedirectAttributes redirectAttributes
+            Authentication authentication
     ) {
+        Map<String, Object> response = new HashMap<>();
         try {
             postService.createPost(
                     projectId, authentication.getName(), title, content,
                     files, pollTitle, pollOptions, pollEndDate, pollAllowMultiple
             );
-            redirectAttributes.addFlashAttribute("successMessage", "게시글이 성공적으로 작성되었습니다.");
+
+            // 성공 메시지와 리다이렉트할 ID 반환
+            response.put("message", "게시글이 성공적으로 작성되었습니다.");
+            response.put("projectId", projectId);
+            return ResponseEntity.ok(response);
+
         } catch (IllegalArgumentException | IOException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "게시글 작성 실패: " + e.getMessage());
+            // 실패 메시지 반환
+            response.put("error", "게시글 작성 실패");
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         }
-        return "redirect:/project/detail/" + projectId;
     }
 
     /** 투표 처리 */
     @PostMapping("/post/vote")
-    public String vote(
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> vote(
             @RequestParam Long projectId,
             @RequestParam(required = false) List<Long> pollOptionIds,
             @RequestParam Long postId,
-            Authentication authentication,
-            RedirectAttributes redirectAttributes
+            Authentication authentication
     ) {
+        Map<String, Object> response = new HashMap<>();
         try {
             // 누가 투표했는지
             postService.vote(pollOptionIds, authentication.getName());
-            redirectAttributes.addFlashAttribute("pollSuccessMessage", "투표가 완료되었습니다.");
+
+            response.put("message", "투표가 완료되었습니다.");
+            response.put("projectId", projectId);
+            return ResponseEntity.ok(response);
 
         } catch (IllegalArgumentException e) {
             // "이미 참여한 투표입니다" 같은 에러 메시지를 전달
-            redirectAttributes.addFlashAttribute("pollErrorMessage", e.getMessage());
+            response.put("error", "투표 실패");
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         }
-
-        redirectAttributes.addFlashAttribute("targetPostId", postId);
-        return "redirect:/project/detail/" + projectId;
     }
 
 
     /** 게시글 수정 form */
     @GetMapping("/post/{postId}/edit")
-    public String showEditForm(@PathVariable Long postId, Model model) {
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> showEditForm(@PathVariable Long postId) {
         Post post = postService.getPostById(postId);
-        model.addAttribute("post", post);
-        model.addAttribute("projectId", post.getProject().getId());
-        return "post/edit";
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("post", post); // Post 엔티티 반환 (순환 참조 주의 필요)
+        response.put("projectId", post.getProject().getId());
+
+        return ResponseEntity.ok(response);
     }
 
     /** 게시글 수정 */
     @PostMapping("/post/{postId}/edit")
-    public String updatePost(
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> updatePost(
             @PathVariable Long postId,
             @RequestParam String title,
             @RequestParam String content,
@@ -100,12 +117,18 @@ public class PostController {
         postService.updatePost(postId, authentication.getName(), title, content);
 
         Post post = postService.getPostById(postId);
-        return "redirect:/project/detail/" + post.getProject().getId();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Post Updated");
+        response.put("projectId", post.getProject().getId());
+
+        return ResponseEntity.ok(response);
     }
 
     /** 게시글 삭제 */
     @PostMapping("/post/{postId}/delete")
-    public String deletePost(
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> deletePost(
             @PathVariable Long postId,
             Authentication authentication
     ) {
@@ -114,15 +137,24 @@ public class PostController {
 
         postService.deletePost(postId, authentication.getName());
 
-        return "redirect:/project/detail/" + projectId;
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Post Deleted");
+        response.put("projectId", projectId);
+
+        return ResponseEntity.ok(response);
     }
 
     /** 게시글 고정 */
     @PostMapping("/post/{postId}/pin")
-    public String togglePin(@PathVariable Long postId) {
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> togglePin(@PathVariable Long postId) {
         Post post = postService.getPostById(postId);
         postService.togglePin(postId);
 
-        return "redirect:/project/detail/" + post.getProject().getId();
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Pin Toggled");
+        response.put("projectId", post.getProject().getId());
+
+        return ResponseEntity.ok(response);
     }
 }

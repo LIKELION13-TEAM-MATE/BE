@@ -93,10 +93,10 @@ public class RoadmapApiController {
             @ApiResponse(responseCode = "400", description = "잘못된 요청 값"),
             @ApiResponse(responseCode = "404", description = "프로젝트를 찾을 수 없음")
     })
-    public ResponseEntity<Void> createRoadmap(
-            @Parameter(description = "프로젝트 ID", example = "1")
-            @PathVariable Long projectId,
-            @RequestBody RoadmapCreateRequest request
+    public ResponseEntity<String> createRoadmap( // Void -> String 변경
+                                                 @Parameter(description = "프로젝트 ID", example = "1")
+                                                 @PathVariable Long projectId,
+                                                 @RequestBody RoadmapCreateRequest request
     ) {
         roadmapService.createRoadmap(
                 projectId,
@@ -105,7 +105,8 @@ public class RoadmapApiController {
                 request.getDeadline(),
                 request.getMemberIds()
         );
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        // JSON 응답 반환
+        return ResponseEntity.status(HttpStatus.CREATED).body("{\"message\": \"Roadmap Created\"}");
     }
 
     // 로드맵 수정
@@ -118,10 +119,10 @@ public class RoadmapApiController {
             @ApiResponse(responseCode = "200", description = "로드맵 수정 성공"),
             @ApiResponse(responseCode = "404", description = "로드맵을 찾을 수 없음")
     })
-    public ResponseEntity<Void> updateRoadmap(
-            @Parameter(description = "로드맵 ID", example = "1")
-            @PathVariable Long roadmapId,
-            @RequestBody RoadmapUpdateRequest request
+    public ResponseEntity<String> updateRoadmap( // Void -> String 변경
+                                                 @Parameter(description = "로드맵 ID", example = "1")
+                                                 @PathVariable Long roadmapId,
+                                                 @RequestBody RoadmapUpdateRequest request
     ) {
         roadmapService.updateRoadmap(
                 roadmapId,
@@ -130,7 +131,7 @@ public class RoadmapApiController {
                 request.getDeadline(),
                 request.getMemberIds()
         );
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("{\"message\": \"Roadmap Updated\"}");
     }
 
     // 로드맵 삭제
@@ -140,15 +141,15 @@ public class RoadmapApiController {
             description = "특정 로드맵 단계를 삭제합니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "로드맵 삭제 성공"),
+            @ApiResponse(responseCode = "200", description = "로드맵 삭제 성공"), // 204 -> 200 변경
             @ApiResponse(responseCode = "404", description = "로드맵을 찾을 수 없음")
     })
-    public ResponseEntity<Void> deleteRoadmap(
-            @Parameter(description = "로드맵 ID", example = "1")
-            @PathVariable Long roadmapId
+    public ResponseEntity<String> deleteRoadmap( // Void -> String 변경
+                                                 @Parameter(description = "로드맵 ID", example = "1")
+                                                 @PathVariable Long roadmapId
     ) {
         roadmapService.deleteRoadmap(roadmapId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("{\"message\": \"Roadmap Deleted\"}");
     }
 
     // Task 추가
@@ -161,13 +162,13 @@ public class RoadmapApiController {
             @ApiResponse(responseCode = "201", description = "Task 추가 성공"),
             @ApiResponse(responseCode = "404", description = "로드맵을 찾을 수 없음")
     })
-    public ResponseEntity<Void> addTask(
-            @Parameter(description = "로드맵 ID", example = "1")
-            @PathVariable Long roadmapId,
-            @RequestBody TaskCreateRequest request
+    public ResponseEntity<String> addTask( // Void -> String 변경
+                                           @Parameter(description = "로드맵 ID", example = "1")
+                                           @PathVariable Long roadmapId,
+                                           @RequestBody TaskCreateRequest request
     ) {
         roadmapService.addTask(roadmapId, request.getContent());
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ResponseEntity.status(HttpStatus.CREATED).body("{\"message\": \"Task Added\"}");
     }
 
     // Task 체크 토글
@@ -180,12 +181,12 @@ public class RoadmapApiController {
             @ApiResponse(responseCode = "200", description = "Task 상태 변경 성공"),
             @ApiResponse(responseCode = "404", description = "Task를 찾을 수 없음")
     })
-    public ResponseEntity<Void> toggleTask(
-            @Parameter(description = "Task ID", example = "1")
-            @PathVariable Long taskId
+    public ResponseEntity<String> toggleTask( // Void -> String 변경
+                                              @Parameter(description = "Task ID", example = "1")
+                                              @PathVariable Long taskId
     ) {
         roadmapService.toggleTask(taskId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("{\"message\": \"Task Toggled\"}");
     }
 
     // Task 메모 등록/수정
@@ -198,13 +199,13 @@ public class RoadmapApiController {
             @ApiResponse(responseCode = "200", description = "Task 메모 수정 성공"),
             @ApiResponse(responseCode = "404", description = "Task를 찾을 수 없음")
     })
-    public ResponseEntity<Void> updateTaskNote(
-            @Parameter(description = "Task ID", example = "1")
-            @PathVariable Long taskId,
-            @RequestBody TaskNoteUpdateRequest request
+    public ResponseEntity<String> updateTaskNote( // Void -> String 변경
+                                                  @Parameter(description = "Task ID", example = "1")
+                                                  @PathVariable Long taskId,
+                                                  @RequestBody TaskNoteUpdateRequest request
     ) {
         roadmapService.updateTaskNote(taskId, request.getNote());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("{\"message\": \"Task Note Updated\"}");
     }
 
     // Task 삭제
@@ -214,15 +215,15 @@ public class RoadmapApiController {
             description = "특정 Task를 삭제합니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Task 삭제 성공"),
+            @ApiResponse(responseCode = "200", description = "Task 삭제 성공"), // 204 -> 200 변경
             @ApiResponse(responseCode = "404", description = "Task를 찾을 수 없음")
     })
-    public ResponseEntity<Void> deleteTask(
-            @Parameter(description = "Task ID", example = "1")
-            @PathVariable Long taskId
+    public ResponseEntity<String> deleteTask( // Void -> String 변경
+                                              @Parameter(description = "Task ID", example = "1")
+                                              @PathVariable Long taskId
     ) {
         roadmapService.deleteTask(taskId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("{\"message\": \"Task Deleted\"}");
     }
 
     // === 내부 매핑 메서드 ===

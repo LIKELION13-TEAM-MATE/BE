@@ -11,9 +11,12 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity; // 추가
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections; // 추가
 import java.util.List;
+import java.util.Map; // 추가
 
 @Tag(name = "ChatRoom", description = "프로젝트 채팅방/메시지 API")
 @RestController
@@ -33,14 +36,14 @@ public class ChatRoomApiController {
             @ApiResponse(responseCode = "400", description = "요청값 오류/프로젝트 참여자 아님", content = @Content)
     })
     @GetMapping("/projects/{projectId}/chat-members")
-    public List<ProjectMemberResponse> getProjectMembers(
-            @Parameter(description = "프로젝트 ID", example = "1", required = true)
-            @PathVariable Long projectId,
+    public ResponseEntity<List<ProjectMemberResponse>> getProjectMembers( // ResponseEntity로 변경
+                                                                          @Parameter(description = "프로젝트 ID", example = "1", required = true)
+                                                                          @PathVariable Long projectId,
 
-            @Parameter(description = "요청자(본인) memberId", example = "10", required = true)
-            @RequestParam Long requesterMemberId
+                                                                          @Parameter(description = "요청자(본인) memberId", example = "10", required = true)
+                                                                          @RequestParam Long requesterMemberId
     ) {
-        return chatRoomService.getProjectMembers(projectId, requesterMemberId);
+        return ResponseEntity.ok(chatRoomService.getProjectMembers(projectId, requesterMemberId));
     }
 
     @Operation(
@@ -53,14 +56,14 @@ public class ChatRoomApiController {
             @ApiResponse(responseCode = "400", description = "요청값 오류/프로젝트 참여자 아님", content = @Content)
     })
     @GetMapping("/projects/{projectId}/chatrooms")
-    public List<ChatRoomResponse> getChatRooms(
-            @Parameter(description = "프로젝트 ID", example = "1", required = true)
-            @PathVariable Long projectId,
+    public ResponseEntity<List<ChatRoomResponse>> getChatRooms( // ResponseEntity로 변경
+                                                                @Parameter(description = "프로젝트 ID", example = "1", required = true)
+                                                                @PathVariable Long projectId,
 
-            @Parameter(description = "조회 요청자(본인) memberId", example = "10", required = true)
-            @RequestParam Long memberId
+                                                                @Parameter(description = "조회 요청자(본인) memberId", example = "10", required = true)
+                                                                @RequestParam Long memberId
     ) {
-        return chatRoomService.getChatRooms(projectId, memberId);
+        return ResponseEntity.ok(chatRoomService.getChatRooms(projectId, memberId));
     }
 
     @Operation(
@@ -73,21 +76,24 @@ public class ChatRoomApiController {
             @ApiResponse(responseCode = "400", description = "요청값 오류/프로젝트 참여자 아님/비밀번호 형식 오류", content = @Content)
     })
     @PostMapping("/projects/{projectId}/chatrooms")
-    public Long createChatRoom(
-            @Parameter(description = "프로젝트 ID", example = "1", required = true)
-            @PathVariable Long projectId,
+    public ResponseEntity<Map<String, Long>> createChatRoom( // Long -> Map JSON 반환
+                                                             @Parameter(description = "프로젝트 ID", example = "1", required = true)
+                                                             @PathVariable Long projectId,
 
-            @Parameter(description = "생성자(본인) memberId", example = "10", required = true)
-            @RequestParam Long creatorMemberId,
+                                                             @Parameter(description = "생성자(본인) memberId", example = "10", required = true)
+                                                             @RequestParam Long creatorMemberId,
 
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "채팅방 생성 요청 바디",
-                    required = true,
-                    content = @Content(schema = @Schema(implementation = ChatRoomCreateRequest.class))
-            )
-            @RequestBody ChatRoomCreateRequest req
+                                                             @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                                                                     description = "채팅방 생성 요청 바디",
+                                                                     required = true,
+                                                                     content = @Content(schema = @Schema(implementation = ChatRoomCreateRequest.class))
+                                                             )
+                                                             @RequestBody ChatRoomCreateRequest req
     ) {
-        return chatRoomService.createChatRoom(projectId, creatorMemberId, req);
+        Long chatRoomId = chatRoomService.createChatRoom(projectId, creatorMemberId, req);
+
+        // 단순 숫자 대신 { "chatRoomId": 1 } 형태의 JSON 반환
+        return ResponseEntity.ok(Collections.singletonMap("chatRoomId", chatRoomId));
     }
 
     @Operation(
@@ -100,21 +106,24 @@ public class ChatRoomApiController {
             @ApiResponse(responseCode = "400", description = "요청값 오류/초대되지 않음/비밀번호 불일치", content = @Content)
     })
     @PostMapping("/chatrooms/{chatRoomId}/messages")
-    public Long sendMessage(
-            @Parameter(description = "채팅방 ID", example = "100", required = true)
-            @PathVariable Long chatRoomId,
+    public ResponseEntity<Map<String, Long>> sendMessage( // Long -> Map JSON 반환
+                                                          @Parameter(description = "채팅방 ID", example = "100", required = true)
+                                                          @PathVariable Long chatRoomId,
 
-            @Parameter(description = "보내는 사람(본인) memberId", example = "10", required = true)
-            @RequestParam Long senderMemberId,
+                                                          @Parameter(description = "보내는 사람(본인) memberId", example = "10", required = true)
+                                                          @RequestParam Long senderMemberId,
 
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "메시지 전송 요청 바디",
-                    required = true,
-                    content = @Content(schema = @Schema(implementation = ChatMessageSendRequest.class))
-            )
-            @RequestBody ChatMessageSendRequest req
+                                                          @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                                                                  description = "메시지 전송 요청 바디",
+                                                                  required = true,
+                                                                  content = @Content(schema = @Schema(implementation = ChatMessageSendRequest.class))
+                                                          )
+                                                          @RequestBody ChatMessageSendRequest req
     ) {
-        return chatRoomService.sendMessage(chatRoomId, senderMemberId, req);
+        Long messageId = chatRoomService.sendMessage(chatRoomId, senderMemberId, req);
+
+        // 단순 숫자 대신 { "messageId": 100 } 형태의 JSON 반환
+        return ResponseEntity.ok(Collections.singletonMap("messageId", messageId));
     }
 
     @Operation(
@@ -127,16 +136,16 @@ public class ChatRoomApiController {
             @ApiResponse(responseCode = "400", description = "요청값 오류/초대되지 않음/비밀번호 불일치", content = @Content)
     })
     @GetMapping("/chatrooms/{chatRoomId}/messages")
-    public List<ChatMessageResponse> getRecentMessages(
-            @Parameter(description = "채팅방 ID", example = "100", required = true)
-            @PathVariable Long chatRoomId,
+    public ResponseEntity<List<ChatMessageResponse>> getRecentMessages( // ResponseEntity로 변경
+                                                                        @Parameter(description = "채팅방 ID", example = "100", required = true)
+                                                                        @PathVariable Long chatRoomId,
 
-            @Parameter(description = "조회 요청자(본인) memberId", example = "10", required = true)
-            @RequestParam Long memberId,
+                                                                        @Parameter(description = "조회 요청자(본인) memberId", example = "10", required = true)
+                                                                        @RequestParam Long memberId,
 
-            @Parameter(description = "비밀번호 방이면 필요(4자리 숫자)", example = "1234", required = false)
-            @RequestParam(required = false) String roomPassword
+                                                                        @Parameter(description = "비밀번호 방이면 필요(4자리 숫자)", example = "1234", required = false)
+                                                                        @RequestParam(required = false) String roomPassword
     ) {
-        return chatRoomService.getRecentMessages(chatRoomId, memberId, roomPassword);
+        return ResponseEntity.ok(chatRoomService.getRecentMessages(chatRoomId, memberId, roomPassword));
     }
 }

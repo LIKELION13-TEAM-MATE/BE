@@ -15,10 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * 기존 TeamController(HTML redirect)와 별도로,
- * 같은 비즈니스 로직을 사용하는 REST API 버전 컨트롤러.
- */
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "Team", description = "프로젝트 팀원 초대/강퇴 관리 API")

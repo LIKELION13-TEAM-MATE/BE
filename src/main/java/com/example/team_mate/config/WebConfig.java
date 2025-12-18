@@ -17,6 +17,7 @@ public class WebConfig implements WebMvcConfigurer {
                         // "https://프론트엔드배포주소.com" // 나중에 프론트엔드 팀원이 배포하면 그 주소 꼭 추가!
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
                 .allowCredentials(true)
                 .maxAge(3600);
     }

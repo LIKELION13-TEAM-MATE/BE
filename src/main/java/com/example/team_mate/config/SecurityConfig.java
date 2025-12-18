@@ -47,8 +47,8 @@ public class SecurityConfig {
                                 "/",
                                 "/member/signup",
                                 "/member/login",
-                                "/api/v1/member/signup",
-                                "/api/v1/member/login",
+                                "/api/v1/members/signup",
+                                "/api/v1/members/login",
                                 "/css/**",
                                 "/js/**",
                                 "/uploads/**",        // 업로드된 파일 접근 허용
@@ -110,5 +110,6 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 
 }

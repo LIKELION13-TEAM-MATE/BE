@@ -2,19 +2,23 @@ package com.example.team_mate.domain.comment.comment.controller;
 
 import com.example.team_mate.domain.comment.comment.dto.CommentCreateRequest;
 import com.example.team_mate.domain.comment.comment.dto.CommentCreateResponse;
+import com.example.team_mate.domain.comment.comment.dto.CommentListResponse;
 import com.example.team_mate.domain.comment.comment.entity.Comment;
 import com.example.team_mate.domain.comment.comment.service.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity; // 추가
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,6 +28,25 @@ import org.springframework.web.bind.annotation.*;
 public class CommentApiController {
 
     private final CommentService commentService;
+    // 댓글 목록 조회
+    @GetMapping("/post/{postId}")
+    @Operation(
+            summary = "댓글 목록 조회",
+            description = "특정 게시글에 작성된 모든 댓글 목록을 가져옵니다.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "조회 성공",
+                            content = @Content(array = @ArraySchema(schema = @Schema(implementation = CommentListResponse.class)))
+                    )
+            }
+    )
+    public ResponseEntity<List<CommentListResponse>> getCommentsByPost(
+            @Parameter(description = "댓글을 조회할 게시글 ID") @PathVariable Long postId
+    ) {
+        List<CommentListResponse> comments = commentService.getCommentsByPostId(postId);
+        return ResponseEntity.ok(comments);
+    }
 
     // 댓글 작성
     @PostMapping("/{postId}")

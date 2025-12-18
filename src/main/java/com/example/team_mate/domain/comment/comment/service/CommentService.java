@@ -1,5 +1,6 @@
 package com.example.team_mate.domain.comment.comment.service;
 
+import com.example.team_mate.domain.comment.comment.dto.CommentListResponse;
 import com.example.team_mate.domain.comment.comment.entity.Comment;
 import com.example.team_mate.domain.comment.comment.repository.CommentRepository;
 import com.example.team_mate.domain.member.member.entity.Member;
@@ -9,6 +10,8 @@ import com.example.team_mate.domain.post.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -42,5 +45,13 @@ public class CommentService {
             throw new IllegalArgumentException("삭제 권한이 없습니다.");
         }
         commentRepository.delete(comment);
+    }
+
+    /** 댓글 목록 */
+    @Transactional(readOnly = true)
+    public List<CommentListResponse> getCommentsByPostId(Long postId) {
+        return commentRepository.findByPostId(postId).stream()
+                .map(CommentListResponse::new)
+                .toList();
     }
 }

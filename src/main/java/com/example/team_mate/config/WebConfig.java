@@ -12,7 +12,8 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins(
-                        "http://localhost:3000",   // 프론트엔드 로컬 개발 환경
+                        "http://localhost:3000",
+                        "https://localhost:3000",// 프론트엔드 로컬 개발 환경
                         "https://team-mate.shop"   // 백엔드 도메인
                         // "https://프론트엔드배포주소.com" // 나중에 프론트엔드 팀원이 배포하면 그 주소 꼭 추가!
                 )

@@ -94,6 +94,7 @@ public class SecurityConfig {
 
         configuration.setAllowedOriginPatterns(List.of(
                 "http://localhost:3000",
+                "https://localhost:3000",
                 "https://team-mate.shop"
         ));
 

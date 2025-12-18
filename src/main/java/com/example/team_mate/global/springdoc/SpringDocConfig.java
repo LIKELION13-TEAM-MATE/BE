@@ -22,7 +22,10 @@ public class SpringDocConfig {
     public GroupedOpenApi groupApiV1() {
         return GroupedOpenApi.builder()
                 .group("apiV1")
-                .pathsToMatch("/api/**")
+                .pathsToMatch(
+                        "/api/**",
+                        "/member/**"
+                )
                 .build();
     }
 }

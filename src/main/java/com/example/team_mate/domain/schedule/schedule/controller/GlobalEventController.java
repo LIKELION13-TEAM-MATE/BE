@@ -3,11 +3,11 @@ package com.example.team_mate.domain.schedule.schedule.controller;
 import com.example.team_mate.domain.schedule.schedule.dto.EventDailyResponse;
 import com.example.team_mate.domain.schedule.schedule.dto.EventMonthlyDotResponse;
 import com.example.team_mate.domain.schedule.schedule.service.EventService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -15,9 +15,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-@Controller
+@RestController
 @RequiredArgsConstructor
-@RequestMapping("/member")
+@RequestMapping("/api/v1/members/me/calendar")
+@Tag(name = "My Calendar", description = "내 개인 일정(참여 중인 모든 프로젝트 일정) 조회 API")
 public class GlobalEventController {
 
     private final EventService eventService;

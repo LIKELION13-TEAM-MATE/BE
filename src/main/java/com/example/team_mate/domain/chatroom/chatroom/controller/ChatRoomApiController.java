@@ -1,5 +1,6 @@
 package com.example.team_mate.domain.chatroom.chatroom.controller;
 
+import com.example.team_mate.config.CustomUserDetails;
 import com.example.team_mate.domain.chatroom.chatroom.dto.*;
 import com.example.team_mate.domain.chatroom.chatroom.service.ChatRoomService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity; // 추가
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections; // 추가
@@ -80,8 +82,8 @@ public class ChatRoomApiController {
                                                              @Parameter(description = "프로젝트 ID", example = "1", required = true)
                                                              @PathVariable Long projectId,
 
-                                                             @Parameter(description = "생성자(본인) memberId", example = "10", required = true)
-                                                             @RequestParam Long creatorMemberId,
+                                                             @Parameter(hidden = true)
+                                                             @AuthenticationPrincipal CustomUserDetails userDetails,
 
                                                              @io.swagger.v3.oas.annotations.parameters.RequestBody(
                                                                      description = "채팅방 생성 요청 바디",
@@ -90,7 +92,7 @@ public class ChatRoomApiController {
                                                              )
                                                              @RequestBody ChatRoomCreateRequest req
     ) {
-        Long chatRoomId = chatRoomService.createChatRoom(projectId, creatorMemberId, req);
+        Long chatRoomId = chatRoomService.createChatRoom(projectId, userDetails.getUsername(), req);
 
         // 단순 숫자 대신 { "chatRoomId": 1 } 형태의 JSON 반환
         return ResponseEntity.ok(Collections.singletonMap("chatRoomId", chatRoomId));

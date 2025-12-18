@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Controller
-@RequestMapping("/api/v1/members")
+@RequestMapping("/api/v1/member")
 public class MemberController {
 
     private final MemberService memberService;

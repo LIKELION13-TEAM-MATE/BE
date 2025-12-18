@@ -62,9 +62,13 @@ public class ChatRoomService {
     }
 
     // 채팅방 생성
-    public Long createChatRoom(Long projectId, Long creatorMemberId, ChatRoomCreateRequest req) {
+    public Long createChatRoom(Long projectId, String username, ChatRoomCreateRequest req) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("Project not found"));
+
+        Member creator = memberRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        Long creatorMemberId = creator.getId();
 
         if (!projectMemberChecker.isProjectMember(projectId, creatorMemberId)) {
             throw new IllegalArgumentException("프로젝트 참여자만 채팅방 생성 가능");

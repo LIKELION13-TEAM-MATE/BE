@@ -47,8 +47,8 @@ public class SecurityConfig {
                                 "/",
                                 "/member/signup",
                                 "/member/login",
-                                "/api/v1/members/signup",
-                                "/api/v1/members/login",
+                                "/api/v1/member/signup",
+                                "/api/v1/member/login",
                                 "/css/**",
                                 "/js/**",
                                 "/uploads/**",        // 업로드된 파일 접근 허용
@@ -92,23 +92,23 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // 프론트엔드 주소 허용
-        configuration.setAllowedOrigins(List.of("http://localhost:3000", "https://team-mate.shop"));
+        configuration.setAllowedOriginPatterns(List.of(
+                "http://localhost:3000",
+                "https://team-mate.shop"
+        ));
 
-        // 허용할 메서드
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(List.of(
+                "GET", "POST", "PUT", "DELETE", "OPTIONS"
+        ));
 
-        // 허용할 헤더
         configuration.setAllowedHeaders(List.of("*"));
-
-        // 쿠키 및 인증 정보 허용
         configuration.setAllowCredentials(true);
-
-        // 브라우저가 CORS 설정을 캐싱할 시간 (초)
         configuration.setMaxAge(3600L);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 }

@@ -4,6 +4,7 @@ import com.example.team_mate.domain.member.member.entity.Member;
 import com.example.team_mate.domain.member.member.repository.MemberRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class MemberService {
@@ -46,5 +47,11 @@ public class MemberService {
         return memberRepository.findByUsername(username)
                 .filter(m -> passwordEncoder.matches(password, m.getPassword()))
                 .orElse(null);
+    }
+
+    /** 회원 탈퇴 */
+    @Transactional
+    public void deleteMember(String memberId) {
+        memberRepository.deleteByUsername(memberId);
     }
 }

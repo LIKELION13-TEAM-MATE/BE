@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>내 전체 일정</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* (스타일은 기존과 동일하되, 불필요한 폼 스타일은 제거함) */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; padding: 0; background-color: #f5f5f7; }
+        .page { max-width: 420px; margin: 0 auto; background-color: #ffffff; min-height: 100vh; display: flex; flex-direction: column; }
+        header { padding: 12px 16px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: center; position: relative;}
+        .back-row { position: absolute; left: 16px; }
+        .back-row a { text-decoration: none; color: #333; font-size: 18px; }
+        header h2 { margin: 0; font-size: 18px; }
+
+        main { padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 16px; }
+
+        /* 캘린더 */
+        .calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;}
+        .month-display { font-weight: 600; font-size: 18px; }
+        .month-nav { display: flex; gap: 6px; }
+        .nav-btn { border: 1px solid #ddd; background: #fff; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        table.calendar { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 13px; }
+        table.calendar th { padding-bottom: 8px; font-weight: 500; color: #999; }
+        table.calendar td { height: 40px; text-align: center; vertical-align: top; cursor: pointer; position: relative; }
+        .day-number { display: inline-flex; width: 24px; height: 24px; border-radius: 50%; align-items: center; justify-content: center; margin-bottom: 2px;}
+        .day-number.today { background-color: #eee; font-weight: bold;}
+        .day-number.selected { background-color: #3b82f6; color: #fff; }
+        .event-dots { display: flex; justify-content: center; gap: 2px; }
+        .event-dot { width: 4px; height: 4px; border-radius: 50%; background-color: #3b82f6; }
+
+        /* 리스트 */
+        .day-section-title { font-size: 14px; font-weight: 600; margin-top: 10px; color: #333; }
+        .event-list { list-style: none; padding: 0; margin: 10px 0; }
+        .event-item { padding: 12px; border-radius: 12px; background-color: #f9fafb; border: 1px solid #eee; margin-bottom: 8px; cursor: pointer; }
+
+        /* 프로젝트 뱃지 스타일 */
+        .project-badge {
+            display: inline-block;
+            font-size: 11px;
+            background-color: #e0e7ff;
+            color: #4338ca;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .event-item-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+        .event-item-time { font-size: 12px; color: #666; }
+        .empty-message { text-align: center; color: #aaa; font-size: 13px; margin-top: 20px; }
+
+        /* 상세 모달 (읽기 전용) */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: #fff; width: 90%; max-width: 320px; border-radius: 16px; padding: 20px; position: relative; }
+        .modal-close { position: absolute; top: 12px; right: 16px; border: none; background: none; font-size: 20px; cursor: pointer; }
+        .modal-project { font-size: 12px; color: #3b82f6; font-weight: bold; margin-bottom: 4px; }
+        .modal-title { font-size: 18px; font-weight: bold; margin-bottom: 12px; }
+        .modal-info-row { margin-bottom: 8px; font-size: 13px; color: #444; display: flex; gap: 8px; }
+        .modal-label { color: #888; width: 50px; flex-shrink: 0; }
+        .modal-text { flex: 1; white-space: pre-wrap;}
+        .go-project-btn { display: block; width: 100%; margin-top: 16px; padding: 10px; background-color: #3b82f6; color: #fff; text-align: center; border-radius: 8px; text-decoration: none; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="page">
+    <header>
+        <div class="back-row">
+            <a href="javascript:history.back()">&lt;</a>
+        </div>
+        <h2>내 전체 일정</h2>
+    </header>
+
+    <main>
+        <section>
+            <div class="calendar-header">
+                <div class="month-display" id="monthDisplay"></div>
+                <div class="month-nav">
+                    <button class="nav-btn" id="prevMonthBtn">&#8249;</button>
+                    <button class="nav-btn" id="nextMonthBtn">&#8250;</button>
+                </div>
+            </div>
+            <table class="calendar">
+                <thead><tr><th>일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th></tr></thead>
+                <tbody id="calendarBody"></tbody>
+            </table>
+        </section>
+
+        <section>
+            <div class="day-section-title" id="selectedDateLabel">날짜를 선택하세요</div>
+            <div class="empty-message" id="emptyMessage" style="display:none;">일정이 없습니다.</div>
+            <ul class="event-list" id="eventList"></ul>
+        </section>
+    </main>
+
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeModalBtn">&times;</button>
+            <div class="modal-project" id="modalProjectName">프로젝트 이름</div>
+            <div class="modal-title" id="modalTitle">일정 제목</div>
+
+            <div class="modal-info-row">
+                <span class="modal-label">일시</span>
+                <span class="modal-text" id="modalTime"></span>
+            </div>
+            <div class="modal-info-row">
+                <span class="modal-label">메모</span>
+                <span class="modal-text" id="modalMemo"></span>
+            </div>
+            <div class="modal-info-row">
+                <span class="modal-label">참여자</span>
+                <span class="modal-text" id="modalParticipants"></span>
+            </div>
+
+            <a href="#" id="goProjectBtn" class="go-project-btn">이 프로젝트로 이동하기</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const monthDisplay = document.getElementById("monthDisplay");
+        const calendarBody = document.getElementById("calendarBody");
+        const eventList = document.getElementById("eventList");
+        const selectedDateLabel = document.getElementById("selectedDateLabel");
+        const emptyMessage = document.getElementById("emptyMessage");
+
+        // 모달 관련
+        const detailModal = document.getElementById("detailModal");
+        const closeModalBtn = document.getElementById("closeModalBtn");
+        const modalProjectName = document.getElementById("modalProjectName");
+        const modalTitle = document.getElementById("modalTitle");
+        const modalTime = document.getElementById("modalTime");
+        const modalMemo = document.getElementById("modalMemo");
+        const modalParticipants = document.getElementById("modalParticipants");
+        const goProjectBtn = document.getElementById("goProjectBtn");
+
+        let current = new Date();
+        let currentYear = current.getFullYear();
+        let currentMonth = current.getMonth() + 1;
+        let selectedDate = null;
+
+        // 초기 로드
+        loadMonthlyDots();
+
+        // 버튼 이벤트
+        document.getElementById("prevMonthBtn").addEventListener("click", () => {
+            currentMonth--; if(currentMonth===0){currentMonth=12; currentYear--;} loadMonthlyDots();
+        });
+        document.getElementById("nextMonthBtn").addEventListener("click", () => {
+            currentMonth++; if(currentMonth===13){currentMonth=1; currentYear++;} loadMonthlyDots();
+        });
+        closeModalBtn.addEventListener("click", () => detailModal.style.display = "none");
+        detailModal.addEventListener("click", (e) => {
+            if(e.target === detailModal) detailModal.style.display = "none";
+        });
+
+        // 1. 월별 점 로드
+        async function loadMonthlyDots() {
+            try {
+                // Global API 호출
+                const res = await fetch(`/member/api/events/month?year=${currentYear}&month=${currentMonth}`);
+                if (!res.ok) throw new Error("로드 실패");
+                const dots = await res.json();
+                renderCalendar(dots);
+            } catch (e) { console.error(e); renderCalendar([]); }
+        }
+
+        // 2. 캘린더 그리기
+        function renderCalendar(dots) {
+            calendarBody.innerHTML = "";
+            monthDisplay.textContent = `${currentYear}.${String(currentMonth).padStart(2,"0")}`;
+
+            const firstDay = new Date(currentYear, currentMonth-1, 1);
+            const lastDay = new Date(currentYear, currentMonth, 0);
+            const startDay = firstDay.getDay();
+            const totalDays = lastDay.getDate();
+
+            const dotMap = {};
+            dots.forEach(d => dotMap[d.date] = d.eventCount);
+
+            let day = 1;
+            for(let i=0; i<6; i++) {
+                const tr = document.createElement("tr");
+                for(let j=0; j<7; j++) {
+                    const td = document.createElement("td");
+                    if(i===0 && j<startDay || day>totalDays) {
+                        tr.appendChild(td); continue;
+                    }
+
+                    const dateStr = `${currentYear}-${String(currentMonth).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+
+                    const numSpan = document.createElement("div");
+                    numSpan.className = `day-number ${dateStr === selectedDate ? "selected" : ""}`;
+                    numSpan.textContent = day;
+
+                    // 오늘 날짜 표시
+                    const today = new Date();
+                    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+                    if(dateStr === todayStr) numSpan.classList.add("today");
+
+                    td.appendChild(numSpan);
+
+                    if(dotMap[dateStr]) {
+                        const dotsDiv = document.createElement("div");
+                        dotsDiv.className = "event-dots";
+                        // 최대 3개까지만 점 찍기
+                        for(let k=0; k<Math.min(dotMap[dateStr], 3); k++){
+                            const dot = document.createElement("div");
+                            dot.className = "event-dot";
+                            dotsDiv.appendChild(dot);
+                        }
+                        td.appendChild(dotsDiv);
+                    }
+
+                    td.addEventListener("click", () => {
+                        selectedDate = dateStr;
+                        loadDailyEvents(dateStr);
+                        // 선택 효과 갱신을 위해 다시 그림 (비효율적이지만 간단함)
+                        renderCalendar(dots);
+                    });
+
+                    tr.appendChild(td);
+                    day++;
+                }
+                calendarBody.appendChild(tr);
+                if(day > totalDays) break;
+            }
+        }
+
+        // 3. 일별 리스트 로드
+        async function loadDailyEvents(dateStr) {
+            selectedDateLabel.textContent = dateStr;
+            try {
+                // Global API 호출
+                const res = await fetch(`/member/api/events/day?date=${dateStr}`);
+                if (!res.ok) throw new Error("일별 로드 실패");
+                const events = await res.json();
+
+                eventList.innerHTML = "";
+                if(events.length === 0) {
+                    emptyMessage.style.display = "block";
+                } else {
+                    emptyMessage.style.display = "none";
+                    events.forEach(ev => {
+                        const li = document.createElement("li");
+                        li.className = "event-item";
+
+                        // 프로젝트 뱃지 추가
+                        const badge = document.createElement("div");
+                        badge.className = "project-badge";
+                        badge.textContent = ev.projectName || "프로젝트";
+
+                        const title = document.createElement("div");
+                        title.className = "event-item-title";
+                        title.textContent = ev.title;
+
+                        const time = document.createElement("div");
+                        time.className = "event-item-time";
+                        time.textContent = formatTime(ev.startDateTime, ev.endDateTime, ev.allDay);
+
+                        li.appendChild(badge);
+                        li.appendChild(title);
+                        li.appendChild(time);
+
+                        li.addEventListener("click", () => openModal(ev));
+                        eventList.appendChild(li);
+                    });
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function formatTime(start, end, allDay) {
+            if(allDay) return "하루 종일";
+            const s = new Date(start);
+            const e = new Date(end);
+            return `${s.getHours()}:${String(s.getMinutes()).padStart(2,"0")} ~ ${e.getHours()}:${String(e.getMinutes()).padStart(2,"0")}`;
+        }
+
+        // 4. 모달 열기
+        function openModal(ev) {
+            modalProjectName.textContent = ev.projectName;
+            modalTitle.textContent = ev.title;
+            modalTime.textContent = formatTime(ev.startDateTime, ev.endDateTime, ev.allDay);
+            modalMemo.textContent = ev.memo || "-";
+            modalParticipants.textContent = (ev.participantNames || []).join(", ") || "-";
+
+            // 해당 프로젝트의 캘린더 페이지로 이동하는 링크 설정
+            goProjectBtn.href = `/project/${ev.projectId}/events/calendar`;
+
+            detailModal.style.display = "flex";
+        }
+    });
+</script>
+</body>
+</html>

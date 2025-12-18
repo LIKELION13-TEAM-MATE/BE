@@ -203,7 +203,9 @@ public class EventService {
                             e.getAlarmOffsetMinutes(),
                             createdByMe,
                             creatorName,
-                            participantNames
+                            participantNames,
+                            project.getProjectName(),
+                            project.getId()
                     );
                 })
                 .collect(Collectors.toList());
@@ -334,4 +336,58 @@ public class EventService {
         }
 
     }
+
+    // --- 내 캘린더 월별 조회 (점 찍기 용) ---
+    @Transactional(readOnly = true)
+    public List<EventMonthlyDotResponse> getGlobalMonthlyEvents(String username, int year, int month) {
+        Member member = getMemberOrThrow(username);
+
+        LocalDate firstDay = LocalDate.of(year, month, 1);
+        LocalDate lastDay = firstDay.withDayOfMonth(firstDay.lengthOfMonth());
+
+        // 프로젝트 ID 없이 조회
+        List<Event> myEvents = eventRepository.findGlobalMyEvents(
+                member.getId(), firstDay.atStartOfDay(), lastDay.atTime(23, 59, 59)
+        );
+
+        List<EventMonthlyDotResponse> result = new ArrayList<>();
+        for (LocalDate d = firstDay; !d.isAfter(lastDay); d = d.plusDays(1)) {
+            final LocalDate currentDate = d;
+            long count = myEvents.stream().filter(e -> occursOnDate(e, currentDate)).count();
+            if (count > 0) {
+                result.add(EventMonthlyDotResponse.of(currentDate, (int) count));
+            }
+        }
+        return result;
+    }
+
+    // --- 내 캘린더 일별 일정 리스트 조회 ---
+    @Transactional(readOnly = true)
+    public List<EventDailyResponse> getGlobalDailyEvents(String username, LocalDate date) {
+        Member member = getMemberOrThrow(username);
+
+        List<Event> myEvents = eventRepository.findGlobalMyEvents(
+                member.getId(), date.atStartOfDay(), date.atTime(23, 59, 59)
+        );
+
+        return myEvents.stream()
+                .filter(e -> occursOnDate(e, date))
+                .map(e -> {
+                    boolean createdByMe = e.getCreatedBy().getId().equals(member.getId());
+                    List<String> participants = e.getParticipants().stream()
+                            .map(p -> p.getMember().getNickname()).toList();
+
+                    return new EventDailyResponse(
+                            e.getId(), e.getTitle(), e.getMemo(),
+                            e.getStartDateTime(), e.getEndDateTime(), e.isAllDay(),
+                            e.getRepeatType(), e.getAlarmOffsetMinutes(),
+                            createdByMe, e.getCreatedBy().getNickname(), participants,
+                            // [추가] 프로젝트 정보 매핑
+                            e.getProject().getProjectName(),
+                            e.getProject().getId()
+                    );
+                })
+                .collect(Collectors.toList());
+    }
+
 }

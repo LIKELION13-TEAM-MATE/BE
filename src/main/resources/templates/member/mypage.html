@@ -2,13 +2,11 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>환영합니다</title>
+    <title>마이페이지</title>
 </head>
 <body>
-<p><a th:href="@{/}">홈</a></p>
-<h1>환영합니다!</h1>
+<h1>마이페이지</h1>
 
-<!-- 로그인 성공 시, username 변수를 출력 -->
 <div th:if="${#authentication.principal.member.nickname != null}"
      th:with="member=${#authentication.principal.member}"
      th:style="|background-color: ${member.avatarColor};
@@ -19,8 +17,20 @@
 </div>
 <p th:text="'안녕하세요, ' + ${nickname} + ' 님!'"></p>
 
-<!-- 로그아웃 대신 다시 로그인 페이지로 이동 -->
 <p><a th:href="@{/member/login}">로그아웃</a></p>
-<p><a th:href="@{/home/main}">메인 화면</a></p>
+<form action="/member/withdraw" method="post"
+      onsubmit="return confirm('정말로 탈퇴하시겠습니까?');">
+    <button type="submit" style="color: red;">회원탈퇴</button>
+</form>
+
+<!--하단바-->
+<br/>
+<br/>
+<hr/>
+<a th:href="@{/home/main}">메인화면</a> |
+<a th:href="@{/member/my-calendar}">캘린더</a> |
+<a th:href="@{/project/new}">생성</a> |
+<a th:href="@{/project/archive}">보관함</a> |
+<a>마이페이지</a>
 </body>
 </html>

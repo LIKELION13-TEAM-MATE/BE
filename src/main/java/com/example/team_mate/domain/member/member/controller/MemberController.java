@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import java.security.Principal;
 
 @Controller
 @RequestMapping("/member")
@@ -48,11 +49,19 @@ public class MemberController {
         return "member/login";
     }
 
-    /** 환영 페이지 */
-    @GetMapping("/welcome")
+    /** 마이 페이지 */
+    @GetMapping("/mypage")
     public String welcome(Model model, Authentication authentication) {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         model.addAttribute("nickname", userDetails.getNickname());
-        return "member/welcome"; // templates/member/welcome.html
+        return "member/mypage";
+    }
+
+    /** 회원 탈퇴*/
+    @PostMapping("/withdraw")
+    public String withdraw(Principal principal) {
+        String memberId = principal.getName();
+        memberService.deleteMember(memberId);
+        return "redirect:/member/logout";
     }
 }

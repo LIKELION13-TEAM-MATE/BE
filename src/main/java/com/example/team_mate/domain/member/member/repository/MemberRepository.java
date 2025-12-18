@@ -12,4 +12,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     // (회원가입 시) 아이디 중복 체크용
     boolean existsByUsername(String username);
+
+    // 아이디 찾아서 삭제하는 메서드
+    void deleteByUsername(String username);
 }

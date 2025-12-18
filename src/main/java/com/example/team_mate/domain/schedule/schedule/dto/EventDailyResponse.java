@@ -45,4 +45,10 @@ public class EventDailyResponse {
 
     @Schema(description = "참여자 닉네임 리스트", example = "[\"likelion1\", \"likelion2\"]")
     private List<String> participantNames;
+
+    @Schema(description = "프로젝트 이름", example = "멋쟁이사자처럼 팀플")
+    private String projectName;
+
+    @Schema(description = "프로젝트 ID (이동용)", example = "1")
+    private Long projectId;
 }

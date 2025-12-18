@@ -10,6 +10,8 @@ import com.example.team_mate.domain.poll.poll.entity.PollVote;
 import com.example.team_mate.domain.poll.poll.repository.PollOptionRepository;
 import com.example.team_mate.domain.poll.poll.repository.PollRepository;
 import com.example.team_mate.domain.poll.poll.repository.PollVoteRepository;
+import com.example.team_mate.domain.post.post.dto.PostCreateRequest;
+import com.example.team_mate.domain.post.post.dto.PostResponse;
 import com.example.team_mate.domain.post.post.entity.Post;
 import com.example.team_mate.domain.post.post.repository.PostRepository;
 import com.example.team_mate.domain.project.project.entity.Project;
@@ -23,7 +25,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -42,23 +43,18 @@ public class PostService {
 
     /** 게시글 작성 */
     @Transactional
-    public void createPost(
+    public PostResponse createPost(
             Long projectId,
             String username,
-            String title,
-            String content,
-            List<MultipartFile> files,
-            String pollTitle,
-            List<String> pollOptions,
-            LocalDate pollEndDate,
-            boolean pollAllowMultiple
+            PostCreateRequest request,
+            List<MultipartFile> files
     ) throws IOException {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("프로젝트 없음"));
         Member author = memberRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("유저 없음"));
 
-        Post post = new Post(title, content, author, project);
+        Post post = new Post(request.getTitle(), request.getContent(), author, project);
         postRepository.save(post);
 
         // 파일 첨부
@@ -82,21 +78,28 @@ public class PostService {
         }
 
         // 투표 첨부
-        if (pollTitle != null && !pollTitle.trim().isEmpty() && pollOptions != null && !pollOptions.isEmpty()) {
-            Poll poll = new Poll(pollTitle, pollEndDate, pollAllowMultiple);
-            post.setPoll(poll); // 게시글과 투표 연결 (양방향)
-            pollRepository.save(poll);
+        if (request.getPoll() != null) {
+            PostCreateRequest.PollCreateDto pollDto = request.getPoll();
 
-            for (String optionText : pollOptions) {
-                if (optionText != null && !optionText.trim().isEmpty()) {
-                    PollOption pollOption = new PollOption(optionText);
-                    poll.addOption(pollOption); // 투표와 보기 연결 (양방향)
-                    pollOptionRepository.save(pollOption);
+            if (pollDto.getTitle() != null && !pollDto.getTitle().trim().isEmpty()) {
+                // Poll 생성
+                Poll poll = new Poll(pollDto.getTitle(), null, pollDto.isAllowMultiple());
+                post.setPoll(poll); // 게시글과 투표 연결 (양방향)
+                pollRepository.save(poll);
+
+                if (pollDto.getOptions() != null) {
+                    for (PostCreateRequest.PollOptionDto optionDto : pollDto.getOptions()) {
+                        if (optionDto.getText() != null && !optionDto.getText().trim().isEmpty()) {
+                            PollOption pollOption = new PollOption(optionDto.getText());
+                            poll.addOption(pollOption); // 투표와 보기 연결 (양방향)
+                            pollOptionRepository.save(pollOption);
+                        }
+                    }
                 }
             }
-
         }
 
+        return PostResponse.from(post);
     }
 
     /** 투표하기 */

@@ -108,7 +108,9 @@ public class EventService {
             for (Long memberId : request.getParticipantIds()) {
                 Member participant = memberRepository.findById(memberId)
                         .orElseThrow(() -> new IllegalArgumentException("참여자를 찾을 수 없습니다."));
-                new EventParticipant(saved, participant);
+                // 리스트에 추가하는 방식으로 변경
+                EventParticipant ep = new EventParticipant(saved, participant);
+                saved.addParticipant(ep);
             }
         }
 
@@ -261,14 +263,25 @@ public class EventService {
                 request.isVisibleToParticipantsOnly()
         );
 
-        // 참여자 재설정 (간단하게 기존 전부 삭제 후 다시 추가)
-        participantRepository.deleteAll(participantRepository.findByEvent(event));
+        // 👇 [수정됨] 참여자 목록 스마트 업데이트 (중복 에러 방지 로직)
+        // 1. 요청된 ID 리스트 확보
+        List<Long> newMemberIds = request.getParticipantIds() != null ? request.getParticipantIds() : new ArrayList<>();
 
-        if (request.getParticipantIds() != null) {
-            for (Long memberId : request.getParticipantIds()) {
+        // 2. 삭제할 대상 제거: (기존 목록에는 있는데, 새 요청에는 없는 사람)
+        event.getParticipants().removeIf(participant ->
+                !newMemberIds.contains(participant.getMember().getId())
+        );
+
+        // 3. 추가할 대상 추가: (새 요청에는 있는데, 기존 목록에는 없는 사람)
+        for (Long memberId : newMemberIds) {
+            boolean alreadyExists = event.getParticipants().stream()
+                    .anyMatch(p -> p.getMember().getId().equals(memberId));
+
+            if (!alreadyExists) {
                 Member participant = memberRepository.findById(memberId)
                         .orElseThrow(() -> new IllegalArgumentException("참여자를 찾을 수 없습니다."));
-                new EventParticipant(event, participant);
+                EventParticipant newParticipant = new EventParticipant(event, participant);
+                event.addParticipant(newParticipant);
             }
         }
     }

@@ -1,160 +1,146 @@
 package com.example.team_mate.domain.post.post.controller;
 
+import com.example.team_mate.config.CustomUserDetails;
+import com.example.team_mate.domain.post.post.dto.PostCreateRequest;
+import com.example.team_mate.domain.post.post.dto.PostResponse;
 import com.example.team_mate.domain.post.post.entity.Post;
 import com.example.team_mate.domain.post.post.service.PostService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Controller;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
-@Controller
+@RestController
+@RequestMapping("/api/v1")
 @RequiredArgsConstructor
+@Tag(name = "게시글(Post) API", description = "프로젝트 게시글 및 투표 관련 API")
 public class PostController {
 
     private final PostService postService;
+    private final ObjectMapper objectMapper;
 
-    /** 게시물 작성 form */
-    @GetMapping("/project/{projectId}/post/create")
-    @ResponseBody
-    public ResponseEntity<Map<String, Object>> showWriteForm(@PathVariable Long projectId) {
-        // 프론트엔드에 프로젝트 ID 전달
-        Map<String, Object> response = new HashMap<>();
-        response.put("projectId", projectId);
-        return ResponseEntity.ok(response);
-    }
-
-    /** 게시글 작성 처리 */
-    @PostMapping("/project/{projectId}/post/create")
-    @ResponseBody
-    public ResponseEntity<Map<String, Object>> createPost(
+    /** 게시글 생성 (파일 + 투표 포함) */
+    @PostMapping(value = "/projects/{projectId}/posts", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "게시글 생성", description = "게시글을 작성합니다. (파일 첨부 및 투표 생성 가능)")
+    public ResponseEntity<PostResponse> createPost(
+            @Parameter(description = "프로젝트 ID", required = true)
             @PathVariable Long projectId,
-            @RequestParam String title,
-            @RequestParam String content,
-            @RequestParam(required = false) List<MultipartFile> files,
-            @RequestParam(required = false) String pollTitle,
-            @RequestParam(required = false) List<String> pollOptions,
-            @RequestParam(required = false) LocalDate pollEndDate,
-            @RequestParam(required = false, defaultValue = "false") boolean pollAllowMultiple,
-            Authentication authentication
-    ) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            postService.createPost(
-                    projectId, authentication.getName(), title, content,
-                    files, pollTitle, pollOptions, pollEndDate, pollAllowMultiple
-            );
 
-            // 성공 메시지와 리다이렉트할 ID 반환
-            response.put("message", "게시글이 성공적으로 작성되었습니다.");
-            response.put("projectId", projectId);
-            return ResponseEntity.ok(response);
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal CustomUserDetails userDetails,
 
-        } catch (IllegalArgumentException | IOException e) {
-            // 실패 메시지 반환
-            response.put("error", "게시글 작성 실패");
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
+            @Parameter(
+                    description = "게시글 정보 (JSON)",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(
+                                    type = "string",
+                                    example = "{\n" +
+                                            "  \"title\": \"점심 메뉴 투표\",\n" +
+                                            "  \"content\": \"오늘 점심 뭐 먹을까요?\",\n" +
+                                            "  \"poll\": {\n" +
+                                            "    \"title\": \"메뉴 선택\",\n" +
+                                            "    \"allowMultiple\": false,\n" +
+                                            "    \"options\": [\n" +
+                                            "      { \"text\": \"짜장면\" },\n" +
+                                            "      { \"text\": \"짬뽕\" },\n" +
+                                            "      { \"text\": \"탕수육\" }\n" +
+                                            "    ]\n" +
+                                            "  }\n" +
+                                            "}"
+                            )
+                    )
+            )
+            @RequestPart("request") String requestStr,
+
+            @Parameter(description = "첨부 파일 리스트 (다중 선택 가능)", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
+            @RequestPart(value = "files", required = false) List<MultipartFile> files
+    ) throws IOException {
+
+        // 문자열 -> 객체 수동 변환
+        PostCreateRequest request = objectMapper.readValue(requestStr, PostCreateRequest.class);
+
+        PostResponse response = postService.createPost(projectId, userDetails.getUsername(), request, files);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    /** 투표 처리 */
-    @PostMapping("/post/vote")
-    @ResponseBody
-    public ResponseEntity<Map<String, Object>> vote(
-            @RequestParam Long projectId,
-            @RequestParam(required = false) List<Long> pollOptionIds,
-            @RequestParam Long postId,
-            Authentication authentication
+    /** 게시글 목록 조회 */
+    @GetMapping("/projects/{projectId}/posts")
+    @Operation(summary = "게시글 목록 조회", description = "해당 프로젝트의 모든 게시글을 조회합니다.")
+    public ResponseEntity<List<PostResponse>> getPosts(
+            @PathVariable Long projectId
     ) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            // 누가 투표했는지
-            postService.vote(pollOptionIds, authentication.getName());
-
-            response.put("message", "투표가 완료되었습니다.");
-            response.put("projectId", projectId);
-            return ResponseEntity.ok(response);
-
-        } catch (IllegalArgumentException e) {
-            // "이미 참여한 투표입니다" 같은 에러 메시지를 전달
-            response.put("error", "투표 실패");
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-
-    /** 게시글 수정 form */
-    @GetMapping("/post/{postId}/edit")
-    @ResponseBody
-    public ResponseEntity<Map<String, Object>> showEditForm(@PathVariable Long postId) {
-        Post post = postService.getPostById(postId);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("post", post); // Post 엔티티 반환 (순환 참조 주의 필요)
-        response.put("projectId", post.getProject().getId());
-
+        List<Post> posts = postService.getPostsByProject(projectId);
+        List<PostResponse> response = posts.stream()
+                .map(PostResponse::from)
+                .collect(Collectors.toList());
         return ResponseEntity.ok(response);
+    }
+
+    /** 게시글 상세 조회 */
+    @GetMapping("/posts/{postId}")
+    @Operation(summary = "게시글 상세 조회", description = "게시글 ID로 상세 정보를 조회합니다.")
+    public ResponseEntity<PostResponse> getPostDetail(
+            @PathVariable Long postId
+    ) {
+        Post post = postService.getPostById(postId);
+        return ResponseEntity.ok(PostResponse.from(post));
     }
 
     /** 게시글 수정 */
-    @PostMapping("/post/{postId}/edit")
-    @ResponseBody
-    public ResponseEntity<Map<String, Object>> updatePost(
+    @PutMapping("/posts/{postId}")
+    @Operation(summary = "게시글 수정", description = "작성자만 수정 가능합니다.")
+    public ResponseEntity<String> updatePost(
             @PathVariable Long postId,
-            @RequestParam String title,
-            @RequestParam String content,
-            Authentication authentication
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody PostCreateRequest request
     ) {
-        postService.updatePost(postId, authentication.getName(), title, content);
-
-        Post post = postService.getPostById(postId);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "Post Updated");
-        response.put("projectId", post.getProject().getId());
-
-        return ResponseEntity.ok(response);
+        postService.updatePost(postId, userDetails.getUsername(), request.getTitle(), request.getContent());
+        return ResponseEntity.ok("게시글이 수정되었습니다.");
     }
 
     /** 게시글 삭제 */
-    @PostMapping("/post/{postId}/delete")
-    @ResponseBody
-    public ResponseEntity<Map<String, Object>> deletePost(
+    @DeleteMapping("/posts/{postId}")
+    @Operation(summary = "게시글 삭제", description = "작성자만 삭제 가능합니다.")
+    public ResponseEntity<String> deletePost(
             @PathVariable Long postId,
-            Authentication authentication
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        Post post = postService.getPostById(postId);
-        Long projectId = post.getProject().getId();
-
-        postService.deletePost(postId, authentication.getName());
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "Post Deleted");
-        response.put("projectId", projectId);
-
-        return ResponseEntity.ok(response);
+        postService.deletePost(postId, userDetails.getUsername());
+        return ResponseEntity.ok("게시글이 삭제되었습니다.");
     }
 
-    /** 게시글 고정 */
-    @PostMapping("/post/{postId}/pin")
-    @ResponseBody
-    public ResponseEntity<Map<String, Object>> togglePin(@PathVariable Long postId) {
-        Post post = postService.getPostById(postId);
+    /** 게시글 상단 고정 토글 */
+    @PostMapping("/posts/{postId}/pin")
+    @Operation(summary = "게시글 상단 고정 토글", description = "게시글의 상단 고정 여부를 반전시킵니다.")
+    public ResponseEntity<String> togglePin(@PathVariable Long postId) {
         postService.togglePin(postId);
+        return ResponseEntity.ok("토글 성공");
+    }
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "Pin Toggled");
-        response.put("projectId", post.getProject().getId());
-
-        return ResponseEntity.ok(response);
+    /** 투표하기 */
+    @PostMapping("/posts/{postId}/vote")
+    @Operation(summary = "투표하기", description = "게시글의 투표 항목에 투표합니다.")
+    public ResponseEntity<String> vote(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody List<Long> pollOptionIds
+    ) {
+        postService.vote(pollOptionIds, userDetails.getUsername());
+        return ResponseEntity.ok("투표 완료");
     }
 }

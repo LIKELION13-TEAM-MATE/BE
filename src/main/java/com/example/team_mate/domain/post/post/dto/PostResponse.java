@@ -1,9 +1,14 @@
 package com.example.team_mate.domain.post.post.dto;
 
 import com.example.team_mate.domain.post.post.entity.Post;
+import com.example.team_mate.domain.poll.poll.entity.Poll;
+import com.example.team_mate.domain.poll.poll.entity.PollOption;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @Builder
@@ -28,6 +33,9 @@ public class PostResponse {
     @Schema(description = "상단 고정 여부", example = "false")
     private boolean pinned;
 
+    @Schema(description = "투표 정보 (없으면 null)")
+    private PollResponse poll;
+
     public static PostResponse from(Post post) {
         return PostResponse.builder()
                 .id(post.getId())
@@ -36,6 +44,41 @@ public class PostResponse {
                 .authorUsername(post.getAuthor().getUsername())
                 .projectId(post.getProject().getId())
                 .pinned(post.isPinned())
+                .poll(post.getPoll() != null ? PollResponse.from(post.getPoll()) : null)
                 .build();
+    }
+
+    @Getter
+    @Builder
+    public static class PollResponse {
+        private Long id;
+        private String title;
+        private boolean allowMultiple;
+        private List<PollOptionResponse> options;
+
+        public static PollResponse from(Poll poll) {
+            return PollResponse.builder()
+                    .id(poll.getId())
+                    .title(poll.getTitle())
+                    .allowMultiple(poll.isAllowMultiple())
+                    .options(poll.getOptions().stream()
+                            .map(PollOptionResponse::from)
+                            .collect(Collectors.toList()))
+                    .build();
+        }
+    }
+
+    @Getter
+    @Builder
+    public static class PollOptionResponse {
+        private Long id;
+        private String text;
+
+        public static PollOptionResponse from(PollOption option) {
+            return PollOptionResponse.builder()
+                    .id(option.getId())
+                    .text(option.getOptionText())
+                    .build();
+        }
     }
 }

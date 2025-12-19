@@ -2,6 +2,7 @@ package com.example.team_mate.domain.team.team.controller;
 
 import com.example.team_mate.domain.team.team.dto.TeamActionResponse;
 import com.example.team_mate.domain.team.team.dto.TeamInviteRequest;
+import com.example.team_mate.domain.team.team.dto.TeamMemberResponse;
 import com.example.team_mate.domain.team.team.service.TeamService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -103,5 +106,19 @@ public class TeamApiController {
             return ResponseEntity.badRequest()
                     .body(new TeamActionResponse(e.getMessage()));
         }
+    }
+
+    // 초대된 팀원 목록
+    @GetMapping("/members")
+    @Operation(
+            summary = "프로젝트 팀원 목록 조회",
+            description = "해당 프로젝트에 현재 참여 중인 모든 팀원의 목록을 가져옵니다."
+    )
+    public ResponseEntity<List<TeamMemberResponse>> getTeamMembers(
+            @Parameter(description = "프로젝트 ID", example = "1")
+            @PathVariable Long projectId
+    ) {
+        List<TeamMemberResponse> members = teamService.getTeamMembers(projectId);
+        return ResponseEntity.ok(members);
     }
 }

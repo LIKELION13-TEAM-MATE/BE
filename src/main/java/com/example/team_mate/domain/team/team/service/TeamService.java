@@ -4,11 +4,14 @@ import com.example.team_mate.domain.member.member.entity.Member;
 import com.example.team_mate.domain.member.member.repository.MemberRepository;
 import com.example.team_mate.domain.project.project.entity.Project;
 import com.example.team_mate.domain.project.project.repository.ProjectRepository;
+import com.example.team_mate.domain.team.team.dto.TeamMemberResponse;
 import com.example.team_mate.domain.team.team.entity.TeamMembership;
 import com.example.team_mate.domain.team.team.repository.TeamMembershipRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -70,5 +73,17 @@ public class TeamService {
 
         // 팀원 DB에서 삭제
         teamMembershipRepository.delete(membershipToKick);
+    }
+
+    /** 팀원 초대 목록 */
+    @Transactional(readOnly = true)
+    public List<TeamMemberResponse> getTeamMembers(Long projectId) {
+        List<TeamMembership> memberships = teamMembershipRepository.findByProjectId(projectId);
+
+        return memberships.stream()
+                .map(TeamMembership::getMember) // 멤버십에서 Member 엔티티 추출
+                .filter(member -> member != null) // 혹시 모를 null 방지
+                .map(TeamMemberResponse::new) // Member -> TeamMemberResponse 변환 (이니셜/색상 포함)
+                .toList();
     }
 }

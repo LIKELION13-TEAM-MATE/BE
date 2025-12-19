@@ -12,5 +12,5 @@ public interface TeamMembershipRepository extends JpaRepository<TeamMembership, 
     // 중복 초대 방지
     boolean existsByMemberAndProject(Member member, Project project);
     List<TeamMembership> findByProject(Project project);
-
+    List<TeamMembership> findByProjectId(Long projectId);
 }

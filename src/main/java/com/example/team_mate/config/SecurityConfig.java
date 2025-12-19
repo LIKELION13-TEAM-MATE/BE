@@ -95,7 +95,8 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(List.of(
                 "http://localhost:3000",
                 "https://localhost:3000",
-                "https://team-mate.shop"
+                "https://team-mate.shop",
+                "https://teammateshop.vercel.app"
         ));
 
         configuration.setAllowedMethods(List.of(
